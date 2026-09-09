@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import './style.css';
 import { createInspector } from './inspector.js';
+import { batchStaticParts } from './performance.js';
 import { refineHardware } from './details.js';
 // Dimensions use 1 scene unit = 100 mm. The invoice is the build specification.
 export const specification = Object.freeze({
@@ -554,6 +555,7 @@ cc.fillStyle = grad; cc.fillRect(0, 0, 128, 128);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 4.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(contactCanvas), transparent: true, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact);
 
+batchStaticParts(pc, rotors);
 let hyperion = null;
 const builds=[
   {pc,title:'WHITE A21',subtitle:'i5-13500 / RTX 4070 SUPER',specification,target:new THREE.Vector3(0,2.2,0),distance:12.6},

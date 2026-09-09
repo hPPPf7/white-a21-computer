@@ -66,7 +66,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     selected=id;
     for(const child of pc.children) {
       // Lights remain for an isolated object; all unrelated geometry is hidden.
-      child.visible=child.isLight ? originalVisibility.get(child) : (id ? child.userData.partId===id : originalVisibility.get(child));
+      child.visible=child.isLight ? originalVisibility.get(child) : (id ? child.userData.partId===id && originalVisibility.get(child) : originalVisibility.get(child));
     }
     invalidateShadows();
     rows.forEach(row=>row.setAttribute('aria-pressed',String(row.dataset.part===id)));
@@ -119,14 +119,17 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
   window.addEventListener('resize',layout);
   new ResizeObserver(layout).observe(panel);
 
+  const alphaPixels=new WeakMap();
+  let lastHitTest=-Infinity;
   function hitTest() {
     dirty=false;
     if(!hints||!pointer||dragging||transition){hideTooltip();return;}
     const rect=canvas.getBoundingClientRect();
     ndc.set((pointer.x-rect.left)/rect.width*2-1,-(pointer.y-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(ndc,camera);
-    const candidates=pc.children.filter(o=>o.visible&&!o.isLight);
-    const hits=raycaster.intersectObjects(candidates,true);
+    const candidates=[];
+    pc.traverseVisible(o=>{if(o.isMesh&&!o.material?.transparent)candidates.push(o);});
+    const hits=raycaster.intersectObjects(candidates,false);
     let hit=null,id=null;
     for(const intersection of hits) {
       const object=intersection.object;
@@ -136,7 +139,8 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
       if(object.material?.alphaMap && intersection.uv) {
         const map=object.material.alphaMap, uv=intersection.uv.clone();map.transformUv(uv);
         const x=Math.floor(uv.x*map.image.width),y=Math.floor(uv.y*map.image.height);
-        if(map.image.getContext('2d').getImageData(x,y,1,1).data[1]<128)continue;
+        if(!alphaPixels.has(map.image))alphaPixels.set(map.image,map.image.getContext('2d').getImageData(0,0,map.image.width,map.image.height).data);
+        if(alphaPixels.get(map.image)[(y*map.image.width+x)*4+1]<128)continue;
       }
       let ancestor=object;
       while(ancestor&&!ancestor.userData.partId)ancestor=ancestor.parent;
@@ -181,7 +185,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
         camera.lookAt(controls.target);
         if(t===1){cancelMove();controls.update();dirty=true;}
       }
-      if(dirty)hitTest();
+      if(dirty && time-lastHitTest>=75){lastHitTest=time;hitTest();}
     },
     inspect:()=>({selected,hints,list,hover:activeHover,moving:!!transition,visibleParts:[...new Set(pc.children.filter(c=>c.visible&&!c.isLight).map(c=>c.userData.partId))] }),
   };
