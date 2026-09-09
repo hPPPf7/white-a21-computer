@@ -5,8 +5,6 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import './style.css';
 import { createInspector } from './inspector.js';
 import { refineHardware } from './details.js';
-import { createHyperion } from './hyperion.js';
-
 // Dimensions use 1 scene unit = 100 mm. The invoice is the build specification.
 export const specification = Object.freeze({
   cpu: 'Intel Core i5-13500', cores: 14, threads: 20,
@@ -17,12 +15,14 @@ export const specification = Object.freeze({
   gpu: 'GIGABYTE GeForce RTX 4070 SUPER AERO OC 12G',
   case: 'ASUS A21, white', psu: 'Seasonic FOCUS GX-850 ATX 3.0, white',
 });
-
 const canvas = document.querySelector('#scene');
+const compactDevice = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+const maxPixelRatio = compactDevice ? 1 : 1.35;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxPixelRatio));
+renderer.shadowMap.enabled = !compactDevice;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.autoUpdate = false;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.98;
 const scene = new THREE.Scene();
@@ -78,26 +78,51 @@ function box(name, size, position, material = white, radius = 0, parent = pc) {
   mesh.castShadow = true; mesh.receiveShadow = true;
   parent.add(identify(mesh)); return mesh;
 }
+function batchBoxes(name, size, positions, material = white, parent = pc) {
+  const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(...size), material, positions.length);
+  const transform = new THREE.Object3D();
+  positions.forEach((position, index) => {
+    transform.position.set(...position);
+    transform.updateMatrix();
+    mesh.setMatrixAt(index, transform.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingSphere();
+  mesh.name = name;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(identify(mesh));
+  return mesh;
+}
 function cylinder(name, radius, depth, position, material, parent = pc) {
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, depth, 40), material);
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, depth, 24), material);
   mesh.rotation.x = Math.PI / 2;
   mesh.position.set(...position); mesh.name = name;
   mesh.castShadow = true; mesh.receiveShadow = true; parent.add(identify(mesh)); return mesh;
 }
 function torus(radius, thickness, position, material, parent = pc) {
-  const mesh = new THREE.Mesh(new THREE.TorusGeometry(radius, thickness, 8, 64), material);
+  const mesh = new THREE.Mesh(new THREE.TorusGeometry(radius, thickness, 6, 32), material);
   mesh.position.set(...position); parent.add(identify(mesh)); return mesh;
 }
+const labelTextureCache = new Map();
 function label(text, width, height, position, options = {}, parent = pc) {
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 256;
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, 1024, 256);
-  ctx.fillStyle = options.color || '#5d666c';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `${options.weight || 600} ${options.fontSize || 88}px Arial, sans-serif`;
-  ctx.fillText(text, 512, 132, 990);
-  const texture = new THREE.CanvasTexture(c); texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const color = options.color || '#5d666c';
+  const weight = options.weight || 600;
+  const fontSize = options.fontSize || 88;
+  const textureKey = JSON.stringify([text, color, weight, fontSize]);
+  let texture = labelTextureCache.get(textureKey);
+  if (!texture) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, 512, 128);
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${weight} ${fontSize / 2}px Arial, sans-serif`;
+    ctx.fillText(text, 256, 66, 495);
+    texture = new THREE.CanvasTexture(c); texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    labelTextureCache.set(textureKey, texture);
+  }
   const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, toneMapped: false, opacity: options.opacity ?? 1 });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.position.set(...position); mesh.name = text;
@@ -110,7 +135,7 @@ function screw(position, parent = pc) {
 }
 function cable(name, points, radius = 0.04, material = ivory, parent = pc) {
   const path = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(path, Math.max(64, points.length * 12), radius, 10, false), material);
+  const mesh = new THREE.Mesh(new THREE.TubeGeometry(path, Math.max(32, points.length * 6), radius, 8, false), material);
   mesh.castShadow = true; mesh.name = name; parent.add(identify(mesh)); return path;
 }
 // Cut real apertures rather than painting a dark patch on a solid panel.
@@ -285,10 +310,17 @@ function fan(name, position, size, rotation = [0, 0, 0], rgb = true, parent = pc
   shape.bezierCurveTo(0.35, 0.22, 0.20, 0.12, 0.11, 0.09); shape.closePath();
   const bladeGeometry = new THREE.ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: false, curveSegments: 12 });
   const bladeMat = rgb ? mat('#d7e8e9', 0.15, 0.42, { emissive: '#728cad', emissiveIntensity: 0.14, side: THREE.DoubleSide }) : ivory;
+  const blades = new THREE.InstancedMesh(bladeGeometry, bladeMat, 9);
+  const bladeTransform = new THREE.Object3D();
   for (let i = 0; i < 9; i++) {
-    const blade = new THREE.Mesh(bladeGeometry, bladeMat); blade.scale.setScalar(size); blade.rotation.z = i * Math.PI * 2 / 9;
-    rotor.add(blade);
+    bladeTransform.scale.setScalar(size);
+    bladeTransform.rotation.z = i * Math.PI * 2 / 9;
+    bladeTransform.updateMatrix();
+    blades.setMatrixAt(i, bladeTransform.matrix);
   }
+  blades.instanceMatrix.needsUpdate = true;
+  blades.computeBoundingSphere();
+  rotor.add(blades);
   cylinder('Fan hub', size * 0.115, size * 0.17, [0, 0, 0.015], white, group);
   cylinder('Hub inset', size * 0.072, size * 0.006, [0, 0, size * 0.106], silver, group);
   for (const x of [-0.42, 0.42]) for (const y of [-0.42, 0.42]) screw([x * size, y * size, size * 0.109], group);
@@ -301,7 +333,7 @@ fan('Rear 120mm case exhaust', [-2.16, 3.56, 0.17], 1.2, [0, Math.PI / 2, 0], fa
 currentPart = 'cooler';
 box('NANOCOOL PRO 240 radiator', [2.73, 0.27, 1.20], [-0.37, 4.25, 0.05], white, 0.035);
 box('Radiator fin core', [2.43, 0.23, 1.07], [-0.37, 4.25, 0.05], dark);
-for (let i = 0; i < 60; i++) box('Radiator aluminum fin', [0.018, 0.225, 1.08], [-1.55 + i * 0.040, 4.25, 0.05], silver);
+batchBoxes('Radiator aluminum fin', [0.018, 0.225, 1.08], Array.from({length: 60}, (_, i) => [-1.55 + i * 0.040, 4.25, 0.05]), silver);
 for (const z of [-0.565, 0.665]) box('Radiator white sidewall', [2.70, 0.27, 0.045], [-0.37, 4.25, z], white, 0.018);
 for (const x of [-0.99, 0.25]) fan('NANOCOOL 120mm ARGB radiator fan', [x, 4.0, 0.05], 1.2, [Math.PI / 2, 0, 0]);
 label('NANOCOOL', 0.73, 0.12, [-0.35, 4.25, 0.693], { color: '#8b9397', weight: 500 });
@@ -341,10 +373,20 @@ for (let i = 0; i < 2; i++) {
     [1.50+i*0.18,3.94,z],[1.28,4.25,z],[1.01,4.25,z]];
   const path=cable('Continuous coolant hose '+i,points,0.057,sleeve);
   connections.push({name:'Coolant '+i,from:'Pump swivel',to:'Radiator end tank',start:points[0],end:points.at(-1)});
-  for (let j=1;j<100;j++) {
-    const t=j/100, ring=torus(0.0575,0.002,path.getPointAt(t).toArray(),ivory);
-    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),path.getTangentAt(t));
+  const ringCount = 48;
+  const rings = new THREE.InstancedMesh(new THREE.TorusGeometry(0.0575, 0.002, 6, 24), ivory, ringCount - 1);
+  const ringTransform = new THREE.Object3D();
+  for (let j = 1; j < ringCount; j++) {
+    const t = j / ringCount;
+    ringTransform.position.copy(path.getPointAt(t));
+    ringTransform.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), path.getTangentAt(t).normalize());
+    ringTransform.updateMatrix();
+    rings.setMatrixAt(j - 1, ringTransform.matrix);
   }
+  rings.instanceMatrix.needsUpdate = true;
+  rings.computeBoundingSphere();
+  rings.name = 'Coolant hose braided rings ' + i;
+  pc.add(identify(rings));
 }
 
 // Horizontal triple-fan AERO graphics card, with the fan faces underneath.
@@ -354,7 +396,7 @@ box('GPU PCB seated into PCIe slot',[2.84,0.035,1.19],[-0.54,2.22,-0.015],pcb,0,
 box('PCIe gold edge inside motherboard slot',[1.63,0.037,0.11],[-0.88,2.22,-0.624],gold,0,gpu);
 box('GPU rear mounting bracket',[0.29,0.43,1.10],[-2.17,2.13,0.035],silver,0.012,gpu);
 box('RTX 4070 SUPER heatsink', [2.98, 0.36, 1.09], [-0.54, 2.12, 0.04], silver, 0.025, gpu);
-for (let i = 0; i < 74; i++) box('GPU heatsink fin gap', [0.012, 0.32, 1.09], [-1.99 + i * 0.039, 2.11, 0.045], dark, 0, gpu);
+batchBoxes('GPU heatsink fin gap', [0.012, 0.32, 1.09], Array.from({length: 74}, (_, i) => [-1.99 + i * 0.039, 2.11, 0.045]), dark, gpu);
 box('AERO white upper backplate', [3.0, 0.055, 1.13], [-0.54, 2.34, 0.04], white, 0.025, gpu);
 box('AERO bottom fan shroud', [3.0, 0.07, 1.15], [-0.54, 1.90, 0.04], white, 0.028, gpu);
 box('AERO side upper rail', [3.0, 0.10, 0.07], [-0.54, 2.29, 0.62], white, 0.024, gpu);
@@ -495,7 +537,7 @@ areaLight([-5, 3, 2], '#dcf0ff', 2, 4, 5);
 areaLight([4, 5, -3], '#fff5e8', 3, 3, 5);
 const key = new THREE.DirectionalLight('#fffaf2', 1.8);
 key.position.set(3, 8, 5); key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
+key.shadow.mapSize.set(1024, 1024);
 Object.assign(key.shadow.camera, { left: -6, right: 6, top: 7, bottom: -5, near: 0.5, far: 20 });
 key.shadow.normalBias = 0.025; key.shadow.bias = -0.0002; key.shadow.radius = 4;
 scene.add(key);
@@ -512,17 +554,31 @@ cc.fillStyle = grad; cc.fillRect(0, 0, 128, 128);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 4.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(contactCanvas), transparent: true, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact);
 
-
-const hyperion = createHyperion(renderer);
-scene.add(hyperion.pc);hyperion.pc.visible=false;
+let hyperion = null;
 const builds=[
   {pc,title:'WHITE A21',subtitle:'i5-13500 / RTX 4070 SUPER',specification,target:new THREE.Vector3(0,2.2,0),distance:12.6},
-  {...hyperion,views:{gpu:[.65,.25,1],lcdPack:[.45,-.65,1],lcdSingle:[1,.2,.45],ledPack:[1,.15,.30],strimer24:[.3,.2,1],strimerGpu:[.3,.2,1]}}
+  null,
 ];
+async function ensureBuild(index) {
+  if (builds[index]) return builds[index];
+  const { createHyperion } = await import('./hyperion.js');
+  hyperion = createHyperion(renderer);
+  hyperion.pc.visible = false;
+  scene.add(hyperion.pc);
+  builds[1] = {
+    ...hyperion,
+    views:{gpu:[.65,.25,1],lcdPack:[.45,-.65,1],lcdSingle:[1,.2,.45],ledPack:[1,.15,.30],strimer24:[.3,.2,1],strimerGpu:[.3,.2,1]},
+  };
+  return builds[index];
+}
 let buildIndex=0;
 let interacted = false;
 let inspector = null;
-controls.addEventListener('start', () => { interacted = true; });
+let controlActive = false;
+let lastControlChange = -Infinity;
+controls.addEventListener('change', () => { lastControlChange = performance.now(); });
+controls.addEventListener('start', () => { interacted = true; controlActive = true; });
+controls.addEventListener('end', () => { controlActive = false; });
 function frame() {
   const w = window.innerWidth, h = window.innerHeight;
   camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
@@ -536,19 +592,38 @@ function frame() {
 }
 window.addEventListener('resize', frame); frame();
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-inspector = createInspector({ THREE, pc, camera, controls, canvas, reduceMotion });
+inspector = createInspector({
+  THREE, pc, camera, controls, canvas, reduceMotion,
+  invalidateShadows: () => { renderer.shadowMap.needsUpdate = true; },
+});
 const selector=document.createElement('nav');
 selector.className='build-selector';selector.setAttribute('aria-label','切換主機');
 selector.innerHTML='<button class="build-arrow" id="previous-build" aria-label="上一台主機">‹</button><div class="build-identity" aria-live="polite"><span class="build-index">01 / 02</span><strong class="build-title">WHITE A21</strong><span class="build-subtitle">i5-13500 / RTX 4070 SUPER</span></div><button class="build-arrow" id="next-build" aria-label="下一台主機">›</button>';
 document.body.append(selector);
-function switchBuild(index) {
+let switchingBuild = false;
+async function switchBuild(index) {
   index=(index+builds.length)%builds.length;
-  if(index===buildIndex)return;
-  const next=builds[index];
+  if(index===buildIndex || switchingBuild)return;
+  switchingBuild = true;
+  const arrows = [...selector.querySelectorAll('.build-arrow')];
+  const subtitle = selector.querySelector('.build-subtitle');
+  arrows.forEach(button => { button.disabled = true; });
+  subtitle.textContent = '載入 3D 模型…';
+  let next;
+  try {
+    next = await ensureBuild(index);
+  } catch (error) {
+    console.error('Unable to load build', error);
+    subtitle.textContent = '模型載入失敗，請重新整理頁面';
+    return;
+  } finally {
+    switchingBuild = false;
+    arrows.forEach(button => { button.disabled = false; });
+  }
   inspector.setBuild(next);
   builds[buildIndex].pc.visible=false;next.pc.visible=true;
   buildIndex=index;interacted=true;
+  renderer.shadowMap.needsUpdate = true;
   const distance=Math.max(next.distance,next.distance*.82/camera.aspect);
   controls.minDistance=2.3;controls.maxDistance=Math.max(30,distance*1.5);
   inspector.moveCamera(new THREE.Vector3(.66,.34,.88).normalize().multiplyScalar(distance).add(next.target),next.target.clone());
@@ -560,13 +635,23 @@ function switchBuild(index) {
 }
 selector.querySelector('#previous-build').addEventListener('click',()=>switchBuild(buildIndex-1));
 selector.querySelector('#next-build').addEventListener('click',()=>switchBuild(buildIndex+1));
-
 let lastTime = 0;
+let lastRenderTime = 0;
+renderer.shadowMap.needsUpdate = true;
 renderer.setAnimationLoop(time => {
+  if (document.hidden) {
+    lastTime = time;
+    lastRenderTime = time;
+    return;
+  }
+  // Keep wheel zoom and the damping tail smooth after the pointer is released.
+  const targetFps = controlActive || inspector?.moving || time - lastControlChange < 180 ? 60 : 30;
+  if (lastRenderTime && time - lastRenderTime < 1000 / targetFps - 1) return;
   const dt = Math.min((time - lastTime) / 1000, 0.05); lastTime = time;
-  if (!reduceMotion.matches && !document.hidden) {
+  lastRenderTime = time;
+  if (!reduceMotion.matches) {
     if(buildIndex===0)rotors.forEach((rotor,i)=>{rotor.rotation.z-=dt*(i>2?1.8:1.2);});
-    else hyperion.update(dt);
+    else hyperion?.update(dt);
   }
   controls.update();
   inspector.update(time);
@@ -578,9 +663,9 @@ renderer.setAnimationLoop(time => {
 // Read-only inspection hook for render and input verification; no on-screen UI.
 window.__computer = {
   get specification(){return builds[buildIndex].specification;},
-  get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b.pc.visible),fanCounts:buildIndex===1?hyperion.fanCounts:null};},
+  get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:buildIndex===1?(hyperion?.fanCounts??null):null};},
   inspector: inspector.inspect,
-  connections: () => buildIndex===1 ? hyperion.connections() : connections.map(c => {
+  connections: () => buildIndex===1 ? (hyperion?.connections()??[]) : connections.map(c => {
     const result={name:c.name,from:c.from,to:c.to,start:c.start,end:c.end};
     if(c.fromMesh) {
       pc.updateMatrixWorld(true);
@@ -589,5 +674,5 @@ window.__computer = {
     }
     return result;
   }),
-  inspect: () => ({ camera: camera.position.toArray(), target: controls.target.toArray(), distance: camera.position.distanceTo(controls.target), objects: builds[buildIndex].pc.children.length, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles, canvas: [canvas.width, canvas.height] }),
+  inspect: () => ({ camera: camera.position.toArray(), target: controls.target.toArray(), distance: camera.position.distanceTo(controls.target), objects: builds[buildIndex].pc.children.length, renderFrame: renderer.info.render.frame, pixelRatio: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles, canvas: [canvas.width, canvas.height] }),
 };

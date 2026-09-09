@@ -5,6 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 // meshes keep hundreds of contacts, fins and SMD components inexpensive to draw.
 export function refineHardware({pc,renderer}) {
   const unit=new THREE.BoxGeometry(1,1,1), transform=new THREE.Object3D();
+  const textureScale=renderer.getPixelRatio() <= 1 ? 0.5 : 0.75;
   const metal=(color,metalness=.6,roughness=.38)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
   const silver=metal('#adb6bb',.87,.29), white=metal('#e6e8e4',.32,.34);
   const dark=metal('#151b1e',.12,.67), solder=metal('#a1a8ac',.78,.32);
@@ -21,15 +22,21 @@ export function refineHardware({pc,renderer}) {
     mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();return add(mesh,name);
   }
   function cylinder(name,radius,depth,pos,material=silver,rotation=[Math.PI/2,0,0]){
-    const m=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,depth,32),material);m.position.set(...pos);m.rotation.set(...rotation);return add(m,name);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,depth,24),material);m.position.set(...pos);m.rotation.set(...rotation);return add(m,name);
   }
   function torus(name,r,t,pos,material=silver,rotation=[0,0,0]){
-    const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,6,48),material);m.position.set(...pos);m.rotation.set(...rotation);return add(m,name);
+    const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,6,32),material);m.position.set(...pos);m.rotation.set(...rotation);return add(m,name);
   }
-  function texture(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return t;}
+  function texture(w,h,draw){
+    const c=document.createElement('canvas');
+    c.width=Math.max(64,Math.round(w*textureScale));
+    c.height=Math.max(64,Math.round(h*textureScale));
+    const ctx=c.getContext('2d');ctx.scale(c.width/w,c.height/h);draw(ctx,w,h);
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
+  }
   function decal(name,w,h,pos,map,rotation=[0,0,0]){
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map,transparent:true,toneMapped:false,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}));
-    mesh.position.set(...pos);mesh.rotation.set(...rotation);return add(mesh,name);
+    mesh.position.set(...pos);mesh.rotation.set(...rotation);add(mesh,name);mesh.castShadow=false;return mesh;
   }
   function polygon(name,points,depth,pos,material,rotation=[0,0,0],holes=[]){
     const shape=new THREE.Shape();points.forEach(([x,y],i)=>i?shape.lineTo(x,y):shape.moveTo(x,y));shape.closePath();
@@ -246,6 +253,8 @@ export function refineHardware({pc,renderer}) {
       shaped.add(o.geometry);const p=o.geometry.attributes.position;
       for(let i=0;i<p.count;i++)p.setZ(i,p.getZ(i)+.045*(p.getX(i)/.42)*(p.getY(i)/.22));
       p.needsUpdate=true;o.geometry.computeVertexNormals();
+      o.geometry.computeBoundingBox();o.geometry.computeBoundingSphere();
+      if(o.isInstancedMesh){o.computeBoundingBox();o.computeBoundingSphere();}
     });
   }
 

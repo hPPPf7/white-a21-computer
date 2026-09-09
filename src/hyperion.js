@@ -30,6 +30,8 @@ export const hyperionSpec = Object.freeze({
 export function createHyperion(renderer) {
   const root=new THREE.Group();root.name='ROG Hyperion / Ryzen 9800X3D / RTX 5090 D';root.userData.specification=hyperionSpec;
   const rotors=[],links=[];let part='case';
+  const textureCache=new Map();
+  const textureScale=renderer.getPixelRatio() <= 1 ? 0.5 : 0.75;
   const dark=new THREE.MeshStandardMaterial({color:'#131820',metalness:.48,roughness:.33});
   const black=new THREE.MeshStandardMaterial({color:'#080d12',metalness:.13,roughness:.58});
   const gunmetal=new THREE.MeshStandardMaterial({color:'#3a414b',metalness:.8,roughness:.29});
@@ -47,18 +49,27 @@ export function createHyperion(renderer) {
     const m=new THREE.InstancedMesh(new THREE.BoxGeometry(...size),mat,poses.length),o=new THREE.Object3D();
     poses.forEach((p,i)=>{o.position.set(...p);o.updateMatrix();m.setMatrixAt(i,o.matrix);});m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();return add(m,name);
   }
-  function cyl(name,r,d,pos,mat=silver,parent=root){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d,40),mat);m.rotation.x=Math.PI/2;m.position.set(...pos);return add(m,name,parent);}
-  function ring(name,r,t,pos,mat=gunmetal,parent=root){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,64),mat);m.position.set(...pos);return add(m,name,parent);}
+  function cyl(name,r,d,pos,mat=silver,parent=root){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d,24),mat);m.rotation.x=Math.PI/2;m.position.set(...pos);return add(m,name,parent);}
+  function ring(name,r,t,pos,mat=gunmetal,parent=root){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,6,32),mat);m.position.set(...pos);return add(m,name,parent);}
   function beam(name,a,b,w,d,mat=gunmetal) {
     const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),m=box(name,[w,start.distanceTo(end),d],start.clone().add(end).multiplyScalar(.5).toArray(),mat,.02);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.sub(start).normalize());return m;
   }
-  function tex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return t;}
+  function tex(w,h,draw,key=null){
+    if(key&&textureCache.has(key))return textureCache.get(key);
+    const c=document.createElement('canvas');
+    c.width=Math.max(64,Math.round(w*textureScale));
+    c.height=Math.max(64,Math.round(h*textureScale));
+    const ctx=c.getContext('2d');ctx.scale(c.width/w,c.height/h);draw(ctx,w,h);
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+    if(key)textureCache.set(key,t);
+    return t;
+  }
   function decal(name,w,h,pos,map,rot=[0,0,0],parent=root) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false,toneMapped:false}));m.position.set(...pos);m.rotation.set(...rot);add(m,name,parent);m.castShadow=false;return m;
   }
   function text(name,w,h,pos,color='#a8b7c8',rot=[0,0,0],parent=root) {
-    return decal(name,w,h,pos,tex(1024,256,c=>{c.fillStyle=color;c.textAlign='center';c.textBaseline='middle';c.font='600 82px Arial';c.fillText(name,512,128,990);}),rot,parent);
+    return decal(name,w,h,pos,tex(1024,256,c=>{c.fillStyle=color;c.textAlign='center';c.textBaseline='middle';c.font='600 82px Arial';c.fillText(name,512,128,990);},`text:${name}:${color}`),rot,parent);
   }
   function polygon(name,points,depth,pos,mat=dark,rotation=[0,0,0],holes=[]) {
     const s=new THREE.Shape();points.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();
@@ -72,7 +83,7 @@ export function createHyperion(renderer) {
   }
   function tube(name,points,r=.053,mat=rubber) {
     const path=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
-    const m=new THREE.Mesh(new THREE.TubeGeometry(path,Math.max(72,points.length*12),r,10,false),mat);add(m,name);
+    const m=new THREE.Mesh(new THREE.TubeGeometry(path,Math.max(36,points.length*6),r,8,false),mat);add(m,name);
     return path;
   }
   function fitting(name,pos,axis=[1,0,0]) {
@@ -98,7 +109,7 @@ export function createHyperion(renderer) {
       c.strokeStyle='#9670ff';c.beginPath();c.arc(384,350,218,2.4,5.7);c.stroke();
       c.textAlign='center';c.fillStyle='#dbefff';c.font='bold 113px Arial';c.fillText(value,384,380);c.font='33px Arial';c.fillText(title,384,465);
       c.fillStyle='#647b9c';c.font='23px monospace';c.fillText('DISPLAY DEMO',384,673);
-    });
+    },`screen:${title}:${value}`);
     return decal(name,w,h,pos,map,rot,parent);
   }
   function fan(name,pos,rotation,id,lcd=false) {
@@ -113,7 +124,13 @@ export function createHyperion(renderer) {
     const rotor=new THREE.Group();group.add(rotor);rotors.push(rotor);
     const shape=new THREE.Shape();shape.moveTo(.13,0);shape.bezierCurveTo(.30,-.08,.48,.0,.46,.17);shape.bezierCurveTo(.36,.26,.22,.16,.12,.08);shape.closePath();
     const geometry=new THREE.ExtrudeGeometry(shape,{depth:.019,bevelEnabled:false,curveSegments:12});
-    for(let i=0;i<9;i++){const blade=new THREE.Mesh(geometry,gunmetal);blade.rotation.z=i*Math.PI*2/9;rotor.add(blade);}
+    const blades=new THREE.InstancedMesh(geometry,gunmetal,9),bladeTransform=new THREE.Object3D();
+    for(let i=0;i<9;i++){
+      bladeTransform.rotation.z=i*Math.PI*2/9;bladeTransform.updateMatrix();blades.setMatrixAt(i,bladeTransform.matrix);
+    }
+    blades.instanceMatrix.needsUpdate=true;
+    blades.computeBoundingSphere();
+    rotor.add(blades);
     cyl('TL motor hub',lcd?.18:.125,.19,[0,0,.04],black,group);
     if(lcd)screen('TL LCD display',.31,.31,[0,0,.144],'LIAN LI','38°',[0,0,0],group);
     else text('LIAN LI',.18,.05,[0,0,.14],'#c8d2dd',[0,0,0],group);

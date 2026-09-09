@@ -1,4 +1,4 @@
-export function createInspector({ THREE, pc, camera, controls, canvas, reduceMotion }) {
+export function createInspector({ THREE, pc, camera, controls, canvas, reduceMotion, invalidateShadows = () => {} }) {
   let parts = [
     { id:'cpu', category:'處理器', title:'Intel Core i5-13500', detail:'14 核心 / 20 執行緒' },
     { id:'motherboard', category:'主機板', title:'ASUS TUF GAMING', detail:'B760M-PLUS WIFI' },
@@ -68,6 +68,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
       // Lights remain for an isolated object; all unrelated geometry is hidden.
       child.visible=child.isLight ? originalVisibility.get(child) : (id ? child.userData.partId===id : originalVisibility.get(child));
     }
+    invalidateShadows();
     rows.forEach(row=>row.setAttribute('aria-pressed',String(row.dataset.part===id)));
     restore.hidden=!id;
     if(id) {
@@ -153,8 +154,8 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     tooltip.style.top=`${Math.max(8,Math.min(pointer.y+18,innerHeight-height-12))}px`;
   }
   return {
-
     get selected(){return selected;},
+    get moving(){return !!transition;},
     moveCamera: flyTo,
     setBuild(build) {
       cancelMove();hideTooltip();pointer=null;
@@ -164,6 +165,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
       catalog=new Map(parts.map(p=>[p.id,p]));
       catalog.set('wiring',{category:'內部線材',title:'供電與訊號連線',detail:'電源、風扇、ARGB 與前面板線材'});
       originalVisibility=new Map(pc.children.map(o=>[o,o.visible]));
+      invalidateShadows();
       ui.querySelector('.parts-list').innerHTML=parts.map((p,i)=>'<button class="part-row" data-part="'+p.id+'" aria-pressed="false"><span class="part-number">'+String(i+1).padStart(2,'0')+'</span><span class="part-copy"><span class="part-category">'+p.category+'</span><strong>'+p.title+'</strong><span class="part-detail">'+p.detail+'</span></span><span class="part-indicator" aria-hidden="true">↗</span></button>').join('');
       rows=[...ui.querySelectorAll('.part-row')];
       rows.forEach(row=>row.addEventListener('click',()=>select(row.dataset.part)));

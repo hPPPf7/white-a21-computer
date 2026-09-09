@@ -72,3 +72,11 @@ CPU：綠色封裝基板、階梯式金屬上蓋、印字、背面接點與電�
 參考：[ASUS A21 官方外形](https://www.asus.com/us/motherboards-components/cases/asus/asus-a21-case/)、[GIGABYTE AERO 官方資料](https://www.gigabyte.com/Graphics-Card/GV-N407SAERO-OC-12GD/sp)、[XPG Lancer 外形](https://www.xpg.com/uk/xpg/DRAM-modules-LANCER-RGB-DDR5)、[KLEVV C710 產品資料](https://www.klevv.com/HyAdmin/upload/goodFile/Product%20Sheet_SSD_CRAS%20C710_v3_EN.pdf)。零件細節與標記為展示用近似重建，沒有使用原廠 CAD 或逐接腳電氣模型。
 
 技術：Three.js、OrbitControls、Vite。所有幾何、材質、標記及環境都在本地生成，不依賴外部模型、CDN、圖片或 API。`src/main.js` 的 `specification` 保存完整配置。
+
+## 效能調整
+
+重複的風扇葉片、冷排鰭片與水冷管編織環使用 InstancedMesh；文字貼圖共用快取，縮減貼圖與曲面細分。第二台主機於首次切換時才載入並建立，後續切換重用模型。載入失敗會保留目前主機並提示重新整理。
+
+桌面渲染像素比例上限 1.35；窄螢幕或觸控裝置上限 1，並停用即時陰影。桌面陰影只在初次顯示、切換主機及配件隔離／還原時更新。閒置風扇動畫目標 30 FPS，拖曳、滾輪縮放、慣性及鏡頭轉場目標 60 FPS；分頁隱藏時停止繪製。實際幀率仍取決於裝置。
+
+Chrome 同視角量測：WHITE A21 每幀繪製呼叫 953 → 650、三角形 484,454 → 218,678；HYPERION 520 → 464、228,948 → 148,756。以裝置像素比例 2 比較，1440 × 1000 桌面渲染像素量減少約 54%，390 × 844 手機減少 75%。這些是繪圖工作量，並非 FPS 加速倍數；代價是高 DPI 細節及陰影精度降低。
