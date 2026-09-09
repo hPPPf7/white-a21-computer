@@ -1,0 +1,45 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #e5e7e8; }
+#scene { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab; }
+#scene:active { cursor: grabbing; }
+body { font-family: Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; color: #26383c; }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 2px solid #377c82; outline-offset: 3px; }
+[hidden] { display: none !important; }
+.viewer-switches { position: fixed; z-index: 5; top: 24px; left: 24px; display: flex; gap: 8px; }
+.viewer-switch { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border: 1px solid #ffffffc9; border-radius: 12px; background: #f8faf9e8; box-shadow: 0 4px 20px #28373d0a; backdrop-filter: blur(18px); font-size: 12px; font-weight: 600; }
+.switch-track { display: inline-block; width: 27px; height: 16px; border-radius: 20px; background: #c4ced0; position: relative; transition: background .2s; }
+.switch-track::after { content: ''; position: absolute; width: 12px; height: 12px; top: 2px; left: 2px; border-radius: 50%; background: white; box-shadow: 0 1px 3px #26383c26; transition: transform .2s; }
+[aria-checked="true"] .switch-track { background: #367b78; }
+[aria-checked="true"] .switch-track::after { transform: translateX(11px); }
+.parts-panel { position: fixed; z-index: 4; top: 84px; left: 24px; width: 318px; max-height: calc(100dvh - 108px); padding: 22px 16px 14px; border: 1px solid #ffffffce; border-radius: 18px; background: #f7f9f8e8; backdrop-filter: blur(24px); box-shadow: 0 12px 40px #35494e12; overflow: auto; scrollbar-width: thin; scrollbar-color: #b8c7c7 transparent; }
+.parts-panel header { display: flex; align-items: center; justify-content: space-between; padding: 0 7px; }
+.panel-eyebrow { font-size: 9px; letter-spacing: .19em; color: #7e9294; font-weight: 700; }
+.parts-panel h1 { font-size: 20px; font-weight: 600; margin: 6px 0 0; letter-spacing: .04em; }
+.part-count { font-size: 30px; font-weight: 300; color: #abbabb; }
+.panel-hint { font-size: 10px; line-height: 1.7; color: #7e8c90; margin: 13px 7px 17px; }
+.parts-list { display: grid; gap: 3px; }
+.part-row { width: 100%; display: flex; text-align: left; align-items: center; gap: 10px; background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 10px 8px; transition: background .18s, border-color .18s; }
+.part-row:hover { background: #e8efed; }
+.part-row[aria-pressed="true"] { background: #e1eeea; border-color: #b4d2c9; }
+.part-number { align-self: flex-start; font-size: 9px; color: #8ea2a4; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.part-copy { display: grid; gap: 4px; flex: 1; }
+.part-category { font-size: 9px; color: #788f90; letter-spacing: .055em; }
+.part-copy strong { font-size: 11px; font-weight: 600; line-height: 1.4; }
+.part-detail { font-size: 9px; color: #829092; line-height: 1.5; }
+.part-indicator { font-size: 14px; color: #93a5a4; }
+.part-row[aria-pressed="true"] .part-indicator { color: #367b78; }
+.restore-build { width: 100%; background: #344e50; color: #f6faf8; font-size: 11px; padding: 12px; border: none; border-radius: 9px; margin-top: 12px; }
+.part-tooltip { position: fixed; z-index: 10; pointer-events: none; max-width: min(310px,calc(100vw - 24px)); padding: 13px 16px; border-radius: 10px; background: #24393eef; color: #f7fbfa; box-shadow: 0 6px 25px #162a3324; display: grid; gap: 5px; }
+.part-tooltip span { color: #a9c9c4; font-size: 10px; }
+.part-tooltip strong { font-size: 12px; font-weight: 500; }
+.part-tooltip small { color: #bdccce; font-size: 10px; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width:700px) {
+  .viewer-switches { top: 14px; left: 14px; }
+  .viewer-switch { padding: 11px 12px; }
+  .parts-panel { top: auto; bottom: 12px; left: 12px; width: calc(100% - 24px); max-height: 35dvh; padding-top: 15px; }
+  .parts-panel h1 { font-size: 17px; }
+  .panel-hint { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion:reduce) { *, *::after { transition: none !important; } }
