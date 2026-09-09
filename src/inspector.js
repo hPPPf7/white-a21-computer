@@ -1,5 +1,5 @@
 export function createInspector({ THREE, pc, camera, controls, canvas, reduceMotion }) {
-  const parts = [
+  let parts = [
     { id:'cpu', category:'處理器', title:'Intel Core i5-13500', detail:'14 核心 / 20 執行緒' },
     { id:'motherboard', category:'主機板', title:'ASUS TUF GAMING', detail:'B760M-PLUS WIFI' },
     { id:'memory', category:'記憶體', title:'XPG Lancer 白色 · 32GB', detail:'DDR5-5600 CL36 · 16GB × 2' },
@@ -10,7 +10,9 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     { id:'case', category:'機殼', title:'ASUS A21 白色', detail:'玻璃側板 · M-ATX · 後置 120mm 風扇' },
     { id:'psu', category:'電源供應器', title:'Seasonic FOCUS GX-850', detail:'850W · ATX 3.0 · 白色 · 全模組' },
   ];
-  const catalog = new Map(parts.map(p => [p.id,p]));
+  let catalog = new Map(parts.map(p => [p.id,p]));
+  const initialParts=parts;
+  let customViews={};
   catalog.set('wiring',{category:'內部線材',title:'供電與訊號連線',detail:'電源、風扇、ARGB 與前面板線材'});
   const ui = document.createElement('div'); ui.className='inspector';
   ui.innerHTML=`
@@ -30,8 +32,8 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
   const hoverSwitch=ui.querySelector('#hover-switch'), listSwitch=ui.querySelector('#list-switch');
   const panel=ui.querySelector('.parts-panel'), tooltip=ui.querySelector('.part-tooltip');
   const restore=ui.querySelector('.restore-build'), status=ui.querySelector('#viewer-status');
-  const rows=[...ui.querySelectorAll('.part-row')];
-  const originalVisibility=new Map(pc.children.map(o=>[o,o.visible]));
+  let rows=[...ui.querySelectorAll('.part-row')];
+  let originalVisibility=new Map(pc.children.map(o=>[o,o.visible]));
   let selected=null, hints=false, list=false, savedView=null, transition=null;
   let pointer=null, dragging=false, dirty=false, activeHover=null;
   const raycaster=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -41,7 +43,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
   function layout() {
     const w=innerWidth,h=innerHeight;
     if(!list) camera.clearViewOffset();
-    else if(w<=700) camera.setViewOffset(w,h,0,panel.getBoundingClientRect().height/2,w,h);
+    else if(w<=700) camera.setViewOffset(w,h,0,(panel.getBoundingClientRect().height-148)/2,w,h);
     else camera.setViewOffset(w,h,-(panel.getBoundingClientRect().right+20)/2,0,w,h);
     camera.updateProjectionMatrix();dirty=true;
   }
@@ -76,12 +78,12 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
       const radius=bounds.getSize(new THREE.Vector3()).length()/2;
       const mobile=innerWidth<=700;
       const availableWidth=innerWidth-(list&&!mobile?panel.getBoundingClientRect().right+20:0);
-      const availableHeight=innerHeight-(list&&mobile?panel.getBoundingClientRect().height:0);
+      const availableHeight=innerHeight-(list&&mobile?panel.getBoundingClientRect().height+148:0);
       const vertical=Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*(availableHeight/innerHeight));
       const horizontal=Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*availableWidth/innerHeight);
       const distance=Math.max(0.75,radius/Math.sin(Math.min(vertical,horizontal))*1.13);
       // The CPU and M.2 SSDs are best inspected from their labeled faces.
-      const viewDirections={memory:[1,0.18,0.50],gpu:[0.55,-0.60,0.95]};
+      const viewDirections={memory:[1,0.18,0.50],gpu:[0.55,-0.60,0.95],...customViews};
       const direction=new THREE.Vector3(...(viewDirections[id]||(['cpu','ssd1','ssd2','motherboard'].includes(id)?[0.22,0.16,1]:[0.56,0.32,1]))).normalize();
       controls.minDistance=Math.max(0.22,radius*0.4);controls.maxDistance=Math.max(23,distance*2);
       flyTo(direction.multiplyScalar(distance).add(center),center);
@@ -151,7 +153,24 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     tooltip.style.top=`${Math.max(8,Math.min(pointer.y+18,innerHeight-height-12))}px`;
   }
   return {
+
     get selected(){return selected;},
+    moveCamera: flyTo,
+    setBuild(build) {
+      cancelMove();hideTooltip();pointer=null;
+      for(const [child,visible] of originalVisibility)child.visible=visible;
+      pc=build.pc;parts=build.parts||initialParts;customViews=build.views||{};
+      selected=null;savedView=null;restore.hidden=true;
+      catalog=new Map(parts.map(p=>[p.id,p]));
+      catalog.set('wiring',{category:'內部線材',title:'供電與訊號連線',detail:'電源、風扇、ARGB 與前面板線材'});
+      originalVisibility=new Map(pc.children.map(o=>[o,o.visible]));
+      ui.querySelector('.parts-list').innerHTML=parts.map((p,i)=>'<button class="part-row" data-part="'+p.id+'" aria-pressed="false"><span class="part-number">'+String(i+1).padStart(2,'0')+'</span><span class="part-copy"><span class="part-category">'+p.category+'</span><strong>'+p.title+'</strong><span class="part-detail">'+p.detail+'</span></span><span class="part-indicator" aria-hidden="true">↗</span></button>').join('');
+      rows=[...ui.querySelectorAll('.part-row')];
+      rows.forEach(row=>row.addEventListener('click',()=>select(row.dataset.part)));
+      ui.querySelector('.part-count').textContent=String(parts.length).padStart(2,'0');
+      ui.querySelector('.panel-eyebrow').textContent=build.title;
+      panel.scrollTop=0;status.textContent='已切換主機：'+build.title;layout();dirty=true;
+    },
     update(time) {
       if(transition) {
         const t=Math.min(1,Math.max(0,(time-transition.start)/850)), eased=t*t*(3-2*t);

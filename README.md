@@ -1,8 +1,18 @@
-# White A21 — Three.js computer
+# Dual PC Collection — Three.js
 
 [線上展示](https://hpppf7.github.io/white-a21-computer/) · [GitHub 原始碼](https://github.com/hPPPf7/white-a21-computer)
 
 依照提供的估價單製作的程序化 3D 展示模型；CPU 已改為 **Intel Core i5-13500，14 核／20 緒**。模型以零件外形與合理裝配位置重建，非原廠 CAD，細部造型為近似。處理器位於水冷頭下，型號另標示於模型水冷頭上。
+
+## 第二台主機與切換
+
+同一網站包含 WHITE A21 與黑色 ROG HYPERION，底部左右箭頭循環切換；手機箭頭位於上方。切換會清除配件選取、同步配置表與提示內容，並平滑重新取景。保留兩個檢視開關的狀態。
+
+第二台依新提供的零件清單重建：AMD Ryzen 7 9800X3D、MSI MEG X870E GODLIKE、G.SKILL Trident Z5 Royal Neo 銀色 DDR5-6000 CL28 48GB (24GB × 2)、WD Black SN850X 4TB、AORUS RTX 5090 D XTREME WATERFORCE 32GB、ROG RYUJIN III 360 ARGB Extreme、ROG Hyperion GR701、ROG Thor 1200W Platinum III ATX 3.1，以及 Strimer Wireless 24P／12V-2×6。
+
+UNI FAN TL Wireless 共七顆：頂部 CPU 冷排使用三顆 LCD、後方一顆 LCD、前方 GPU 冷排使用三顆 LED。兩組 AIO 管路各自連至 CPU／GPU，不共用冷卻迴路。LCD 的數字與圖案是示意畫面，非硬體即時讀值。清單中的砌機服務不列為硬體配件。外形與組件位置為程序化近似重建。
+
+參考：[Hyperion 官方尺寸](https://rog.asus.com/us/cases/rog-hyperion-gr701-model/spec/)、[5090 D WATERFORCE 官方資料](https://www.gigabyte.com/hk/Graphics-Card/GV-N509DAORUSX-W-32GD)。
 
 ## 啟動
 

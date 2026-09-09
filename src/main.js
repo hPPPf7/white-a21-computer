@@ -5,6 +5,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import './style.css';
 import { createInspector } from './inspector.js';
 import { refineHardware } from './details.js';
+import { createHyperion } from './hyperion.js';
 
 // Dimensions use 1 scene unit = 100 mm. The invoice is the build specification.
 export const specification = Object.freeze({
@@ -511,6 +512,14 @@ cc.fillStyle = grad; cc.fillRect(0, 0, 128, 128);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 4.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(contactCanvas), transparent: true, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact);
 
+
+const hyperion = createHyperion(renderer);
+scene.add(hyperion.pc);hyperion.pc.visible=false;
+const builds=[
+  {pc,title:'WHITE A21',subtitle:'i5-13500 / RTX 4070 SUPER',specification,target:new THREE.Vector3(0,2.2,0),distance:12.6},
+  {...hyperion,views:{gpu:[.65,.25,1],lcdPack:[.45,-.65,1],lcdSingle:[1,.2,.45],ledPack:[1,.15,.30],strimer24:[.3,.2,1],strimerGpu:[.3,.2,1]}}
+];
+let buildIndex=0;
 let interacted = false;
 let inspector = null;
 controls.addEventListener('start', () => { interacted = true; });
@@ -518,7 +527,8 @@ function frame() {
   const w = window.innerWidth, h = window.innerHeight;
   camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
   if (!interacted && !inspector?.selected) {
-    const distance = Math.max(12.6, 10.3 / camera.aspect);
+    const distance = Math.max(builds[buildIndex].distance, builds[buildIndex].distance * .82 / camera.aspect);
+    controls.target.copy(builds[buildIndex].target);
     controls.maxDistance = Math.max(23, distance * 1.5);
     camera.position.copy(new THREE.Vector3(0.66, 0.34, 0.88).normalize().multiplyScalar(distance).add(controls.target));
   }
@@ -526,11 +536,38 @@ function frame() {
 }
 window.addEventListener('resize', frame); frame();
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 inspector = createInspector({ THREE, pc, camera, controls, canvas, reduceMotion });
+const selector=document.createElement('nav');
+selector.className='build-selector';selector.setAttribute('aria-label','切換主機');
+selector.innerHTML='<button class="build-arrow" id="previous-build" aria-label="上一台主機">‹</button><div class="build-identity" aria-live="polite"><span class="build-index">01 / 02</span><strong class="build-title">WHITE A21</strong><span class="build-subtitle">i5-13500 / RTX 4070 SUPER</span></div><button class="build-arrow" id="next-build" aria-label="下一台主機">›</button>';
+document.body.append(selector);
+function switchBuild(index) {
+  index=(index+builds.length)%builds.length;
+  if(index===buildIndex)return;
+  const next=builds[index];
+  inspector.setBuild(next);
+  builds[buildIndex].pc.visible=false;next.pc.visible=true;
+  buildIndex=index;interacted=true;
+  const distance=Math.max(next.distance,next.distance*.82/camera.aspect);
+  controls.minDistance=2.3;controls.maxDistance=Math.max(30,distance*1.5);
+  inspector.moveCamera(new THREE.Vector3(.66,.34,.88).normalize().multiplyScalar(distance).add(next.target),next.target.clone());
+  selector.querySelector('.build-index').textContent=String(index+1).padStart(2,'0')+' / 02';
+  selector.querySelector('.build-title').textContent=next.title;
+  selector.querySelector('.build-subtitle').textContent=next.subtitle;
+  document.title=next.title+' · 3D PC';
+  canvas.setAttribute('aria-label',next.title+' 3D 主機模型。拖曳旋轉，右鍵平移，滾輪縮放。');
+}
+selector.querySelector('#previous-build').addEventListener('click',()=>switchBuild(buildIndex-1));
+selector.querySelector('#next-build').addEventListener('click',()=>switchBuild(buildIndex+1));
+
 let lastTime = 0;
 renderer.setAnimationLoop(time => {
   const dt = Math.min((time - lastTime) / 1000, 0.05); lastTime = time;
-  if (!reduceMotion.matches && !document.hidden) rotors.forEach((rotor, i) => { rotor.rotation.z -= dt * (i > 2 ? 1.8 : 1.2); });
+  if (!reduceMotion.matches && !document.hidden) {
+    if(buildIndex===0)rotors.forEach((rotor,i)=>{rotor.rotation.z-=dt*(i>2?1.8:1.2);});
+    else hyperion.update(dt);
+  }
   controls.update();
   inspector.update(time);
   floor.visible = camera.position.y > 0.05;
@@ -540,9 +577,10 @@ renderer.setAnimationLoop(time => {
 
 // Read-only inspection hook for render and input verification; no on-screen UI.
 window.__computer = {
-  specification,
+  get specification(){return builds[buildIndex].specification;},
+  get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b.pc.visible),fanCounts:buildIndex===1?hyperion.fanCounts:null};},
   inspector: inspector.inspect,
-  connections: () => connections.map(c => {
+  connections: () => buildIndex===1 ? hyperion.connections() : connections.map(c => {
     const result={name:c.name,from:c.from,to:c.to,start:c.start,end:c.end};
     if(c.fromMesh) {
       pc.updateMatrixWorld(true);
@@ -551,5 +589,5 @@ window.__computer = {
     }
     return result;
   }),
-  inspect: () => ({ camera: camera.position.toArray(), target: controls.target.toArray(), distance: camera.position.distanceTo(controls.target), objects: pc.children.length, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles, canvas: [canvas.width, canvas.height] }),
+  inspect: () => ({ camera: camera.position.toArray(), target: controls.target.toArray(), distance: camera.position.distanceTo(controls.target), objects: builds[buildIndex].pc.children.length, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles, canvas: [canvas.width, canvas.height] }),
 };
