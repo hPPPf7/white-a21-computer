@@ -632,7 +632,7 @@ async function switchBuild(index) {
   selector.querySelector('.build-index').textContent=String(index+1).padStart(2,'0')+' / 02';
   selector.querySelector('.build-title').textContent=next.title;
   selector.querySelector('.build-subtitle').textContent=next.subtitle;
-  document.title=next.title+' · 3D PC';
+  document.title='computer · '+next.title;
   canvas.setAttribute('aria-label',next.title+' 3D 主機模型。拖曳旋轉，右鍵平移，滾輪縮放。');
 }
 selector.querySelector('#previous-build').addEventListener('click',()=>switchBuild(buildIndex-1));

@@ -1,6 +1,6 @@
-# Dual PC Collection — Three.js
+# computer
 
-[線上展示](https://hpppf7.github.io/white-a21-computer/) · [GitHub 原始碼](https://github.com/hPPPf7/white-a21-computer)
+[線上展示](https://hpppf7.github.io/computer/) · [GitHub 原始碼](https://github.com/hPPPf7/computer)
 
 依照提供的估價單製作的程序化 3D 展示模型；CPU 已改為 **Intel Core i5-13500，14 核／20 緒**。模型以零件外形與合理裝配位置重建，非原廠 CAD，細部造型為近似。處理器位於水冷頭下，型號另標示於模型水冷頭上。
 
