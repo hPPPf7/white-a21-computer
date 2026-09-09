@@ -1,6 +1,6 @@
 # White A21 — Three.js computer
 
-[GitHub 原始碼](https://github.com/hPPPf7/white-a21-computer)
+[線上展示](https://hpppf7.github.io/white-a21-computer/) · [GitHub 原始碼](https://github.com/hPPPf7/white-a21-computer)
 
 依照提供的估價單製作的程序化 3D 展示模型；CPU 已改為 **Intel Core i5-13500，14 核／20 緒**。模型以零件外形與合理裝配位置重建，非原廠 CAD，細部造型為近似。處理器位於水冷頭下，型號另標示於模型水冷頭上。
 
@@ -13,7 +13,7 @@ npm run dev
 
 開啟終端顯示的本機網址。正式建置執行 `npm run build`，輸出在 `dist/`；使用 `npm run preview` 預覽。
 
-目前原始碼已上傳至私人專案，網站尚未發布；此帳號方案不支援私人專案使用 GitHub Pages。啟用 Pages 後可手動執行 Deploy GitHub Pages 工作流程。`vite.config.js` 使用相對資源路徑，支援專案子目錄。
+原始碼公開於 GitHub，網站使用 GitHub Pages。推送至 main 時會自動建置並發布，也可手動執行 Deploy GitHub Pages 工作流程。`vite.config.js` 使用相對資源路徑，支援專案子目錄。
 
 ## 操作
 
