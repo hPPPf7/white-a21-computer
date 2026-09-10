@@ -29,7 +29,17 @@ export function createTurret(renderer){
  function add(g,n,p,m=steel,parent=pc,rotation=[0,0,0]){const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...rotation);o.name=n;o.userData.partId=part;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
  const box=(n,s,p,m=steel,parent=pc)=>add(new THREE.BoxGeometry(...s),n,p,m,parent);
  const cyl=(n,r,h,p,m=silver,parent=pc,rot=[Math.PI/2,0,0])=>add(new THREE.CylinderGeometry(r,r,h,20),n,p,m,parent,rot);
- function text(n,w,h,p,color='#c6cdd2',rot=[0,0,0]){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle=color;x.font='bold 42px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(n,256,64,500);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const o=add(new THREE.PlaneGeometry(w,h),n,p,new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}),pc,rot);o.castShadow=false;return o;}
+ function text(n,w,h,p,color='#c6cdd2',rot=[0,0,0],sharp=false){
+  const c=document.createElement('canvas');c.width=sharp?2048:512;c.height=sharp?Math.max(128,Math.round(c.width*h/w)):128;
+  const x=c.getContext('2d');x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';
+  let fontSize=sharp?Math.floor(c.height*.8):42;x.font='bold '+fontSize+'px Arial';
+  if(sharp){fontSize=Math.floor(fontSize*Math.min(1,c.width*.94/x.measureText(n).width));x.font='bold '+fontSize+'px Arial';}
+  x.fillText(n,c.width/2,c.height/2,c.width*(sharp?.94:500/512));
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+  // Keep mipmaps for stable distant text, with anisotropic sampling for oblique GPU surfaces.
+  if(sharp)t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  const o=add(new THREE.PlaneGeometry(w,h),n,p,new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,toneMapped:!sharp}),pc,rot);o.castShadow=false;return o;
+ }
  function batch(n,g,poses,m){const o=new THREE.InstancedMesh(g,m,poses.length),t=new THREE.Object3D();poses.forEach((p,i)=>{t.position.set(...p.slice(0,3));t.rotation.set(0,0,p[3]||0);t.updateMatrix();o.setMatrixAt(i,t.matrix);});o.computeBoundingSphere();o.name=n;o.userData.partId=part;o.castShadow=true;o.receiveShadow=true;pc.add(o);return o;}
  function plate(n,w,h,p,holes,rot=[0,0,0]){const s=new THREE.Shape();s.moveTo(-w/2,-h/2);s.lineTo(w/2,-h/2);s.lineTo(w/2,h/2);s.lineTo(-w/2,h/2);s.closePath();for(const[x,y,a,b]of holes){const q=new THREE.Path();q.moveTo(x-a/2,y-b/2);q.lineTo(x-a/2,y+b/2);q.lineTo(x+a/2,y+b/2);q.lineTo(x+a/2,y-b/2);q.closePath();s.holes.push(q);}const g=new THREE.ExtrudeGeometry(s,{depth:.025,bevelEnabled:false});g.translate(0,0,-.0125);return add(g,n,p,steel,pc,rot);}
  function mesh(n,w,h,p,rot=[0,0,0]){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,64,64);x.fillStyle='black';for(const[a,b]of [[16,16],[48,48]]){x.beginPath();x.arc(a,b,14,0,7);x.fill();}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(w/.12,h/.12);const m=steel.clone();m.alphaMap=t;m.alphaTest=.5;m.side=THREE.DoubleSide;return add(new THREE.PlaneGeometry(w,h),n,p,m,pc,rot);}
@@ -118,7 +128,7 @@ export function createTurret(renderer){
  wire('Front USB cable',frontIO,usb,[[1.81,4.43,.04],[1.63,4.18,-.70],[1.57,2.51,-.65],[1.20,2.26,-.55],[.99,2.26,-.55],[.99,2.55,-.55],[.70,2.59,-.61]],.026);
  wire('Front power switch lead',frontIO,fp,[[1.81,4.43,.04],[1.61,4.21,-.71],[1.56,1.40,-.58],[.46,1.40,-.58],[.30,1.30,-.62]],.013);
  const light=new THREE.PointLight('#96baff',.8,3,2);light.position.set(1.35,3.5,.45);pc.add(light);
- refineTurretProducts({pc,rotors,links,box,cyl,text,batch,port,wire,setPart:id=>{part=id;},steel,black,silver,pcb,gold,rubber,glow});
+ refineTurretProducts({pc,rotors,links,box,cyl,text,batch,port,wire,renderer,setPart:id=>{part=id;},steel,black,silver,pcb,gold,rubber,glow});
  refineComponentFaces(pc, 2);
  batchStaticParts(pc,rotors);pc.updateMatrixWorld(true);
  return {pc,parts,specification:turretSpec,title:'COUGAR TURRET',subtitle:'Ryzen 5 2600 / RTX 3060 Ti',target:new THREE.Vector3(0,2.3,0),distance:12.6,views:{gpu:[.55,-.65,1],hdd:[.35,1,.60],memory:[.6,.15,1]},fanCounts:{front:2,rear:0,cpu:1,gpu:3},update(dt){rotors.forEach(r=>r.rotation.z-=dt*1.7);},connections(){pc.updateMatrixWorld(true);return links.map(l=>({name:l.name,from:l.from,to:l.to,start:l.start,end:l.end,startSeated:new THREE.Box3().setFromObject(l.a).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.start)),endSeated:new THREE.Box3().setFromObject(l.b).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.end))}));}};

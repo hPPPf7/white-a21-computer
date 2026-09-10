@@ -2,13 +2,13 @@ import * as THREE from 'three';
 
 // Product-based reconstruction. Unknown identities are explicit in the catalogue.
 export function refineTurretProducts(api){
- const {pc,rotors,links,box,cyl,text,batch,port,wire,setPart,steel,black,silver,pcb,gold,rubber,glow}=api;
+ const {pc,rotors,links,box,cyl,text,batch,port,wire,renderer,setPart,steel,black,silver,pcb,gold,rubber,glow}=api;
  const remove=predicate=>{for(const o of [...pc.children])if(predicate(o))o.removeFromParent();};
  const put=(g,n,p,m,rotation=[0,0,0],parent=pc)=>{const o=new THREE.Mesh(g,m);o.name=n;o.position.set(...p);o.rotation.set(...rotation);o.userData.partId=parent===pc?current:parent.userData.partId;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;};
  let current;const part=id=>{current=id;setPart(id);};
  function ring(n,r,t,p,m,rot=[0,0,0],parent=pc){return put(new THREE.TorusGeometry(r,t,6,36),n,p,m,rot,parent);}
  function polygon(n,points,depth,p,m,holes=[],rotation=[0,0,0]){const s=new THREE.Shape();points.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();for(const h of holes){const q=new THREE.Path();if(h.length===3)q.absarc(h[0],h[1],h[2],0,Math.PI*2,true);else {const[x,y,w,hg]=h;q.moveTo(x-w/2,y-hg/2);q.lineTo(x-w/2,y+hg/2);q.lineTo(x+w/2,y+hg/2);q.lineTo(x+w/2,y-hg/2);q.closePath();}s.holes.push(q);}const g=new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:false,curveSegments:18});g.translate(0,0,-depth/2);return put(g,n,p,m,rotation);}
- function sticker(n,w,h,p,draw,rotation=[0,0,0]){const c=document.createElement('canvas');c.width=768;c.height=384;draw(c.getContext('2d'),768,384);const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;const o=put(new THREE.PlaneGeometry(w,h),n,p,new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false}),rotation);o.castShadow=false;return o;}
+ function sticker(n,w,h,p,draw,rotation=[0,0,0]){const c=document.createElement('canvas');const scale=current==='gpu'?2:1;c.width=768*scale;c.height=384*scale;const context=c.getContext('2d');context.scale(scale,scale);draw(context,768,384);const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;if(current==='gpu')map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const o=put(new THREE.PlaneGeometry(w,h),n,p,new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false}),rotation);o.castShadow=false;return o;}
  const label=(n,w,h,p,lines,accent='#266cb5',rot=[0,0,0])=>sticker(n,w,h,p,(c,W,H)=>{c.fillStyle='#e9ebeb';c.fillRect(0,0,W,H);c.fillStyle=accent;c.fillRect(0,0,W,90);c.fillStyle='white';c.font='bold 53px Arial';c.fillText(lines[0],24,64);c.fillStyle='#182229';c.font='32px Arial';lines.slice(1).forEach((l,i)=>c.fillText(l,24,140+i*48));for(let i=0;i<65;i++)c.fillRect(28+i*6,310,1+i%3,44);},rot);
  // Gaming X Trio: official 323 x 140 x 56 mm, three fans, paired 8-pin power.
  part('gpu');remove(o=>o.userData.partId==='gpu'&&!o.name.includes('power connector'));
@@ -36,9 +36,9 @@ export function refineTurretProducts(api){
   for(const a of [Math.PI/4,-Math.PI/4]){const rib=box('Angular silver shroud accent',[.20,.025,.045],[x+.43,1.567,z+(a>0?.53:-.53)],silver);rib.rotation.y=a;}
  }
  box('MSI side sculpted logo rail',[2.10,.19,.05],[-.60,1.86,.755],steel);
- text('msi   GEFORCE RTX',2.02,.13,[-.6,1.865,.784]);
+ text('msi   GEFORCE RTX',2.02,.13,[-.6,1.865,.784],'#e3e7eb',[0,0,0],true);
  for(let i=0;i<4;i++)box('Mystic Light side diffuser',[.50,.043,.044],[-1.36+i*.5,2.075,.751],glow[i]);
- text('GEFORCE RTX',.83,.20,[-1.39,2.151,-.10],'#dfe4eb',[-Math.PI/2,0,0]);
+ text('GEFORCE RTX',.83,.20,[-1.39,2.151,-.10],'#dfe4eb',[-Math.PI/2,0,0],true);
  // Draw a shield mark rather than applying the whole product photo to a box.
  sticker('MSI backplate shield',.48,.45,[-.12,2.151,.10],c=>{c.strokeStyle='#dae0e5';c.lineWidth=15;c.beginPath();c.moveTo(120,60);c.lineTo(650,60);c.lineTo(580,265);c.lineTo(385,345);c.lineTo(190,265);c.closePath();c.stroke();c.font='bold 106px Arial';c.fillStyle='#dae0e5';c.fillText('msi',210,215);},[-Math.PI/2,0,0]);
  for(const x of [-1.75,-.88,.33,1.13])for(const zz of [-.50,.58])cyl('Backplate screw',.023,.01,[x,2.154,zz],silver,pc,[0,0,0]);
