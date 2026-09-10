@@ -6,7 +6,7 @@
 
 ## 第二台主機與切換
 
-同一網站包含 WHITE A21 與黑色 ROG HYPERION，底部左右箭頭循環切換；手機箭頭位於上方。切換會清除配件選取、同步配置表與提示內容，並平滑重新取景。保留兩個檢視開關的狀態。
+同一網站包含 WHITE A21、黑色 ROG HYPERION 與 COUGAR TURRET，底部左右箭頭循環切換；手機箭頭位於上方。切換會清除配件選取、同步配置表與提示內容，並平滑重新取景。保留兩個檢視開關的狀態。
 
 第二台依新提供的零件清單重建：AMD Ryzen 7 9800X3D、MSI MEG X870E GODLIKE、G.SKILL Trident Z5 Royal Neo 銀色 DDR5-6000 CL28 48GB (24GB × 2)、WD Black SN850X 4TB、AORUS RTX 5090 D XTREME WATERFORCE 32GB、ROG RYUJIN III 360 ARGB Extreme、ROG Hyperion GR701、ROG Thor 1200W Platinum III ATX 3.1，以及 Strimer Wireless 24P／12V-2×6。
 
@@ -90,3 +90,11 @@ A21 增加前網折邊、面板卡扣、頂部濾網包邊與拉片、框架折�
 Hyperion 增加門鉸鏈節與轉軸、門扣、玻璃密封條、提把握持面與固定座、雙 USB-C 接孔、耳機孔、PCI 擋板長孔、抽屜面板及腳座肩部。特徵參考 [ASUS 官方 GR701](https://rog.asus.com/cases/rog-hyperion-gr701-model/)，尺寸與細節仍為展示用近似模型，門與抽屜不提供開合操作。
 
 新增幾何在 `src/case-details.js` 中建立，歸入機殼配件並與既有靜態幾何合併繪製。
+
+## 第三台：COUGAR TURRET
+
+Ryzen 5 2600（6 核心／12 執行緒、3.40 GHz）、MSI X470 GAMING PRO CARBON、DDR4 32GB（16GB × 2）、MSI RTX 3060 Ti 8GB、Intel SSDPEKKW256G8 256GB M.2、WD10EZEX-00BBHA0 1TB HDD、Cooler Master MWE Bronze 550。依使用者實機照片配置 AMD 下吹式散熱器、前方兩顆 RGB 風扇，後方不加風扇。
+
+第三台於首次切換時才載入，提供十項配件隔離與提示，包含電源艙內的 HDD；SATA 資料／供電、CPU EPS、24-pin、GPU、PWM 與前面板線路皆有連續曲線及端點檢查。
+
+機殼比例參考 [COUGAR TURRET 官方資料](https://cougargaming.com/products/cases/turret/)。缺少正面照片，透明前面板按系列外形近似。RAM 品牌、電源版本及顯卡完整款式未確認，顯卡底面的三風扇配置、插頭細節與被遮蔽的線路為展示用假設；不把未知款式當作已確認型號。

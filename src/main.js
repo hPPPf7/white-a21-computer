@@ -561,10 +561,14 @@ batchStaticParts(pc, rotors);
 let hyperion = null;
 const builds=[
   {pc,title:'WHITE A21',subtitle:'i5-13500 / RTX 4070 SUPER',specification,target:new THREE.Vector3(0,2.2,0),distance:12.6},
-  null,
+  null, null,
 ];
 async function ensureBuild(index) {
   if (builds[index]) return builds[index];
+  if(index===2){
+    const {createTurret}=await import('./turret.js');
+    const turret=createTurret(renderer);turret.pc.visible=false;scene.add(turret.pc);builds[2]=turret;return turret;
+  }
   const { createHyperion } = await import('./hyperion.js');
   hyperion = createHyperion(renderer);
   hyperion.pc.visible = false;
@@ -602,7 +606,7 @@ inspector = createInspector({
 });
 const selector=document.createElement('nav');
 selector.className='build-selector';selector.setAttribute('aria-label','切換主機');
-selector.innerHTML='<button class="build-arrow" id="previous-build" aria-label="上一台主機">‹</button><div class="build-identity" aria-live="polite"><span class="build-index">01 / 02</span><strong class="build-title">WHITE A21</strong><span class="build-subtitle">i5-13500 / RTX 4070 SUPER</span></div><button class="build-arrow" id="next-build" aria-label="下一台主機">›</button>';
+selector.innerHTML='<button class="build-arrow" id="previous-build" aria-label="上一台主機">‹</button><div class="build-identity" aria-live="polite"><span class="build-index">01 / 03</span><strong class="build-title">WHITE A21</strong><span class="build-subtitle">i5-13500 / RTX 4070 SUPER</span></div><button class="build-arrow" id="next-build" aria-label="下一台主機">›</button>';
 document.body.append(selector);
 let switchingBuild = false;
 async function switchBuild(index) {
@@ -631,7 +635,7 @@ async function switchBuild(index) {
   const distance=Math.max(next.distance,next.distance*.82/camera.aspect);
   controls.minDistance=2.3;controls.maxDistance=Math.max(30,distance*1.5);
   inspector.moveCamera(new THREE.Vector3(.66,.34,.88).normalize().multiplyScalar(distance).add(next.target),next.target.clone());
-  selector.querySelector('.build-index').textContent=String(index+1).padStart(2,'0')+' / 02';
+  selector.querySelector('.build-index').textContent=String(index+1).padStart(2,'0')+' / '+String(builds.length).padStart(2,'0');
   selector.querySelector('.build-title').textContent=next.title;
   selector.querySelector('.build-subtitle').textContent=next.subtitle;
   document.title='computer · '+next.title;
@@ -655,7 +659,7 @@ renderer.setAnimationLoop(time => {
   lastRenderTime = time;
   if (!reduceMotion.matches) {
     if(buildIndex===0)rotors.forEach((rotor,i)=>{rotor.rotation.z-=dt*(i>2?1.8:1.2);});
-    else hyperion?.update(dt);
+    else builds[buildIndex]?.update(dt);
   }
   controls.update();
   inspector.update(time);
@@ -667,9 +671,9 @@ renderer.setAnimationLoop(time => {
 // Read-only inspection hook for render and input verification; no on-screen UI.
 window.__computer = {
   get specification(){return builds[buildIndex].specification;},
-  get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:buildIndex===1?(hyperion?.fanCounts??null):null};},
+  get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:builds[buildIndex]?.fanCounts??null};},
   inspector: inspector.inspect,
-  connections: () => buildIndex===1 ? (hyperion?.connections()??[]) : connections.map(c => {
+  connections: () => buildIndex!==0 ? (builds[buildIndex]?.connections()??[]) : connections.map(c => {
     const result={name:c.name,from:c.from,to:c.to,start:c.start,end:c.end};
     if(c.fromMesh) {
       pc.updateMatrixWorld(true);
