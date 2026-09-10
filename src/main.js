@@ -1,3 +1,5 @@
+import { routedCurve } from './routing.js';
+import { inspectClearance } from './clearance.js';
 import { refineCase } from './case-details.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -136,7 +138,7 @@ function screw(position, parent = pc) {
   box('Screw slot', [0.028, 0.005, 0.002], [position[0], position[1], position[2] + 0.008], dark, 0, parent);
 }
 function cable(name, points, radius = 0.04, material = ivory, parent = pc) {
-  const path = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
+  const path = routedCurve(points);
   const mesh = new THREE.Mesh(new THREE.TubeGeometry(path, Math.max(32, points.length * 6), radius, 8, false), material);
   mesh.castShadow = true; mesh.name = name; parent.add(identify(mesh)); return path;
 }
@@ -254,9 +256,9 @@ for (let i = 0; i < 20; i++) {
 }
 for (let i = 0; i < 9; i++) cylinder('Solid capacitor', 0.035, 0.085, [-1.61 + i * 0.21, 2.3, -0.61], silver);
 box('I/O armor', [0.45, 1.14, 0.23], [-1.66, 3.31, -0.565], dark, 0.035);
-box('VRM top heatsink', [1.24, 0.23, 0.2], [-0.67, 3.85, -0.57], silver, 0.016);
+box('VRM top heatsink', [1.24, 0.19, 0.2], [-0.67, 3.65, -0.57], silver, 0.016);
 for (let i = 0; i < 10; i++) box('VRM fin', [0.024, 0.93, 0.05], [-1.845 + i * 0.04, 3.35, -0.42], silver);
-label('TUF GAMING', 0.85, 0.13, [-0.68, 3.86, -0.455], { color: '#42494c' });
+label('TUF GAMING', 0.85, 0.13, [-0.68, 3.65, -0.455], { color: '#42494c' });
 box('LGA1700 retention bracket', [0.69, 0.81, 0.05], [-0.72, 3.18, -0.645], silver, 0.02);
 currentPart = 'cpu';
 box('Intel Core i5-13500 · 14 cores · 20 threads', [0.43, 0.49, 0.035], [-0.72, 3.18, -0.596], silver, 0.02);
@@ -269,8 +271,8 @@ for (const [y, name] of [[2.46, 'UMAX M1500 · 1TB'], [1.91, 'KLEVV C710 · 1TB'
   screw([-1.025, y, -0.575]);
 }
 currentPart = 'motherboard';
-box('Chipset heatsink', [0.48, 0.40, 0.14], [0.21, 1.94, -0.59], dark, 0.02);
-label('TUF', 0.30, 0.13, [0.21, 1.94, -0.51], { color: '#acb6b9' });
+box('Chipset heatsink', [0.48, 0.40, 0.14], [0.21, 1.67, -0.64], dark, 0.02);
+label('TUF', 0.30, 0.13, [0.21, 1.67, -0.56], { color: '#acb6b9' });
 box('PCIe x16 reinforced slot', [1.69, 0.11, 0.10], [-0.88, 2.22, -0.625], silver, 0.014);
 box('PCIe bottom slot', [0.83, 0.07, 0.08], [-1.14, 1.70, -0.625], black);
 
@@ -460,32 +462,32 @@ for(let i=0;i<24;i++) {
     [1.12+row*0.03,0.82+dy*0.3,-0.96],[0.66,0.69+dy*0.3,-0.64],[-0.76,0.69+dy*0.48,-0.57+row*0.25]],0.012);
 }
 box('ATX fitted cable comb',[0.037,0.42,0.11],[0.93,3.12,-0.31],ivory,0.008);
-const eps=socket('Motherboard ATX_12V 8-pin',[-1.24,3.91,-0.595],[0.30,0.12,0.20]);
+const eps=socket('Motherboard ATX_12V 8-pin',[-1.24,3.82,-0.595],[0.30,0.12,0.20]);
 const psuEps=socket('PSU CPU EPS modular plug',[-0.78,0.88,-0.14],[0.19,0.13,0.24]);
 for(let i=0;i<8;i++) {
   const dx=((i%4)-1.5)*0.046,row=Math.floor(i/4);
   wire('CPU EPS12V conductor '+i,eps,psuEps,
-    [[-1.24+dx,3.93,-0.54+row*0.025],[-1.24+dx,4.12,-0.47+row*0.025],
-     [-1.24+dx,4.14,-0.72],[-1.24+dx,4.14,-0.96],[-1.24+dx,3.73,-0.98],
+    [[-1.24+dx,3.83,-0.54+row*0.025],[-1.24+dx,3.82,-0.54+row*0.025],[-1.24+dx,3.82,-0.66],
+     [-1.24+dx,4.14,-0.66],[-1.24+dx,4.14,-0.96],[-1.24+dx,3.73,-0.98],
      [-0.68+dx,1.0,-0.98],[-0.68+dx,0.80,-0.98],[-0.38,0.78,-0.35],[-0.76,0.88+row*0.025,-0.14+dx]],0.012);
 }
 
 // Fan PWM, pump power and addressable lighting are separate circuits.
-const cpuFan=socket('CPU_FAN header',[0.22,3.91,-0.615]);
-const cpuOpt=socket('CPU_OPT header',[0.02,3.91,-0.615]);
+const cpuFan=socket('CPU_FAN header',[-0.40,3.91,-0.615]);
+const cpuOpt=socket('CPU_OPT header',[-0.60,3.91,-0.615]);
 const pumpHeader=socket('AIO_PUMP header',[-0.18,3.91,-0.615]);
 const chassisFan=socket('CHA_FAN header',[-1.67,2.63,-0.615]);
-const argb=socket('5V ADD_GEN2 header',[0.48,3.91,-0.615]);
-const pumpLead=socket('Pump power lead',[-0.90,3.47,-0.38],[0.10,0.07,0.10]);
-wire('Pump power to AIO_PUMP',pumpLead,pumpHeader,[[-0.90,3.47,-0.38],[-0.90,3.61,-0.39],[-0.47,3.65,-0.47],[-0.18,3.76,-0.53],[-0.18,3.91,-0.58]],0.016,dark);
+const argb=socket('5V ADD_GEN2 header',[0.48,2.45,-0.615]);
+const pumpLead=socket('Pump power lead',[-0.90,3.565,-0.30],[0.10,0.07,0.10]);
+wire('Pump power to AIO_PUMP',pumpLead,pumpHeader,[[-0.90,3.565,-0.30],[-0.90,3.61,-0.30],[-0.18,3.61,-0.30],[-0.18,3.81,-0.30],[-0.18,3.81,-0.67],[-0.18,3.91,-0.58]],0.016,dark);
 for(const [x,header] of [[-0.99,cpuOpt],[0.25,cpuFan]]) {
-  const lead=socket('Radiator fan PWM lead '+x,[x+0.53,4.0,-0.46],[0.09,0.08,0.10]);
-  wire('Radiator fan to '+header.name,lead,header,[[x+0.53,4.0,-0.46],[x+0.53,4.02,-0.67],[header.position.x,4.04,-0.67],[header.position.x,3.91,-0.58]],0.014,dark);
+  const lead=socket('Radiator fan PWM lead '+x,[x+0.53,4.0,-0.62],[0.09,0.08,0.10]);
+  wire('Radiator fan to '+header.name,lead,header,[[x+0.53,4.0,-0.62],[x+0.53,4.08,-0.67],[header.position.x,4.08,-0.67],[header.position.x,3.91,-0.58]],0.014,dark);
 }
-const rearLead=socket('Rear fan PWM lead',[-2.05,3.04,-0.35],[0.10,0.10,0.12]);
-wire('Rear fan to CHA_FAN',rearLead,chassisFan,[[-2.05,3.04,-0.35],[-1.98,2.9,-0.50],[-1.82,2.77,-0.55],[-1.67,2.63,-0.58]],0.016,dark);
+const rearLead=socket('Rear fan PWM lead',[-1.985,3.04,-0.35],[0.10,0.10,0.12]);
+wire('Rear fan to CHA_FAN',rearLead,chassisFan,[[-1.985,3.04,-0.35],[-1.98,2.88,-0.29],[-1.95,2.58,-0.29],[-1.67,2.58,-0.35],[-1.67,2.63,-0.58]],0.016,dark);
 const lightSplit=socket('ARGB splitter junction',[0.96,3.80,-0.66],[0.17,0.08,0.10]);
-wire('5V ARGB main harness',argb,lightSplit,[[0.48,3.91,-0.58],[0.69,4.00,-0.67],[0.96,3.95,-0.66],[0.96,3.80,-0.66]],0.013,ivory);
+wire('5V ARGB main harness',argb,lightSplit,[[0.48,2.45,-0.58],[0.78,2.45,-0.58],[0.78,3.80,-0.58],[0.78,4.00,-0.67],[0.96,3.95,-0.66],[0.96,3.80,-0.66]],0.013,ivory);
 for(const x of [-0.99,0.25]) {
   const led=socket('Radiator fan ARGB lead '+x,[x+0.58,4.0,0.56],[0.07,0.08,0.10]);
   wire('Fan ARGB branch '+x,lightSplit,led,[[0.96,3.8,-0.66],[1.02,3.99,-0.67],[x+0.62,3.99,-0.67],[x+0.62,3.99,0.56],[x+0.58,4.0,0.56]],0.012,ivory);
@@ -673,6 +675,7 @@ window.__computer = {
   get specification(){return builds[buildIndex].specification;},
   get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:builds[buildIndex]?.fanCounts??null};},
   inspector: inspector.inspect,
+  clearance:()=>inspectClearance(builds[buildIndex].pc),
   connections: () => buildIndex!==0 ? (builds[buildIndex]?.connections()??[]) : connections.map(c => {
     const result={name:c.name,from:c.from,to:c.to,start:c.start,end:c.end};
     if(c.fromMesh) {

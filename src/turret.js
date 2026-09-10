@@ -1,3 +1,4 @@
+import { routedCurve } from './routing.js';
 import { refineTurretProducts } from './turret-products.js';
 import * as THREE from 'three';
 import { batchStaticParts } from './performance.js';
@@ -36,10 +37,10 @@ export function createTurret(renderer){
  const rotor=new THREE.Group();g.add(rotor);rotors.push(rotor);const s=new THREE.Shape();s.moveTo(.09,0);s.bezierCurveTo(.27,-.11,.49,-.04,.44,.15);s.bezierCurveTo(.32,.28,.16,.15,.09,.06);s.closePath();const geo=new THREE.ExtrudeGeometry(s,{depth:.022,bevelEnabled:false,curveSegments:5});const blades=new THREE.InstancedMesh(geo,steel,9),t=new THREE.Object3D();for(let i=0;i<9;i++){t.rotation.z=i*Math.PI*2/9;t.scale.setScalar(size);t.updateMatrix();blades.setMatrixAt(i,t.matrix);}blades.computeBoundingSphere();rotor.add(blades);cyl('Fan hub',size*.12,.12,[0,0,.08],black,g);return g;
  }
  function port(n,p,s=[.14,.12,.12]){return box(n,s,p,black);}
- function wire(n,a,b,points,r=.018,m=rubber){const old=part;part='wiring';const path=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));add(new THREE.TubeGeometry(path,Math.max(24,points.length*5),r,6,false),n,[0,0,0],m);links.push({name:n,from:a.name,to:b.name,start:points[0],end:points.at(-1),a,b});part=old;}
+ function wire(n,a,b,points,r=.018,m=rubber){const old=part;part='wiring';const path=routedCurve(points);add(new THREE.TubeGeometry(path,Math.max(24,points.length*5),r,6,false),n,[0,0,0],m);links.push({name:n,from:a.name,to:b.name,start:points[0],end:points.at(-1),a,b});part=old;}
  // Chassis proportions follow TURRET; front finish is an approximation without a front photograph.
  box('Chassis floor',[4.10,.08,2.02],[0,.27,0]);box('Right steel side',[4.08,4.20,.04],[0,2.4,-1]);
- plate('Motherboard tray',3.80,3.67,[0,2.62,-.82],[[1.30,.58,.39,.8],[1.3,-.67,.39,.59],[-.8,1.59,.60,.24]]);
+ plate('Motherboard tray',3.80,3.67,[0,2.62,-.82],[[1.30,.58,.39,.8],[1.3,-.67,.39,.59],[-1.50,1.745,.32,.14]]);
  for(const x of [-2.01,2.01])for(const z of [-.96,.96])box('Chassis corner upright',[.075,4.22,.07],[x,2.4,z]);
  for(const y of [.34,4.47])for(const z of [-.97,.97])box('Side frame folded rail',[4.08,.10,.08],[0,y,z]);
  for(const x of [-1.52,1.52])for(const z of [-.73,.73]){box('Case foot',[.44,.18,.34],[x,.14,z]);box('Rubber foot pad',[.38,.035,.29],[x,.032,z],rubber);}
@@ -103,14 +104,14 @@ export function createTurret(renderer){
  part='frontFans';fan('Upper RGB front intake',[1.87,3.56,.02],1.2,[0,-Math.PI/2,0]);fan('Lower RGB front intake',[1.87,2.18,.02],1.2,[0,-Math.PI/2,0]);
  const fanA=port('Upper fan cable connector',[1.85,3.04,-.51]),fanB=port('Lower fan cable connector',[1.85,1.65,-.51]);
  // Continuous point-to-point cable routes through the rear cable chamber.
- wire('24-pin motherboard power',powerOut,atx,[[-.54,.72,-.48],[-.33,.68,-.89],[1.16,.79,-.91],[1.34,2.7,-.91],[1.28,3.08,-.60],[.97,3.15,-.38],[.69,3.13,-.61]],.067);
- wire('CPU EPS power',powerOut,eps,[[-.54,.72,-.48],[-.48,.71,-.91],[-1.72,.9,-.91],[-1.75,4.35,-.91],[-1.43,4.4,-.77],[-1.41,4.3,-.61]],.034);
- wire('GPU PCIe power',powerOut,gpuPower,[[-.54,.72,-.48],[.0,.7,-.55],[.99,.73,-.25],[1.02,1.14,.36],[.93,1.80,.70],[.67,1.89,.63],[.66,2.12,.70]],.052);
- wire('HDD SATA data',hddData,sata,[[.365,.53,-.28],[.23,.47,-.49],[.82,.62,-.90],[1.31,1.30,-.9],[1.09,1.65,-.58],[.61,1.71,-.59]],.017);
+ wire('24-pin motherboard power',powerOut,atx,[[-.54,.72,-.48],[-.33,.68,-.89],[1.16,.79,-.91],[1.30,3.15,-.91],[1.30,3.15,-.60],[.97,3.15,-.38],[.69,3.13,-.61]],.067);
+ wire('CPU EPS power',powerOut,eps,[[-.54,.72,-.48],[-.48,.71,-.91],[-1.72,.9,-.91],[-1.75,4.39,-.91],[-1.50,4.39,-.91],[-1.50,4.39,-.60],[-1.43,4.39,-.60],[-1.41,4.3,-.61]],.034);
+ wire('GPU PCIe power',powerOut,gpuPower,[[-.54,.72,-.48],[.0,.82,-.55],[.22,.92,-.55],[1.05,.92,.32],[1.05,1.34,.32],[1.52,1.34,.85],[1.52,2.34,.86],[.66,2.34,.86],[.66,2.12,.70]],.052);
+ wire('HDD SATA data',hddData,sata,[[.365,.53,-.28],[.23,.47,-.49],[.82,.62,-.90],[1.30,1.93,-.90],[1.30,1.93,-.58],[1.09,1.65,-.58],[.61,1.71,-.59]],.017);
  wire('HDD SATA power',powerOut,hddPower,[[-.54,.72,-.48],[-.11,.49,-.41],[.12,.44,.06],[.365,.53,.06]],.035);
  for(const[a,y]of [[fanA,3.04],[fanB,1.65]])wire('Front fan power '+y,a,sysFan,[[1.85,y,-.51],[1.75,y-.15,-.86],[1.36,1.40,-.9],[.93,1.38,-.61],[.62,1.46,-.61]],.016);
- wire('Front USB cable',frontIO,usb,[[1.81,4.43,.04],[1.63,4.18,-.89],[1.36,2.76,-.91],[1.06,2.55,-.62],[.70,2.59,-.61]],.026);
- wire('Front power switch lead',frontIO,fp,[[1.81,4.43,.04],[1.61,4.21,-.89],[1.35,1.15,-.91],[.46,1.14,-.69],[.30,1.30,-.62]],.013);
+ wire('Front USB cable',frontIO,usb,[[1.81,4.43,.04],[1.63,4.18,-.70],[1.57,2.51,-.65],[1.20,2.26,-.55],[.99,2.26,-.55],[.99,2.55,-.55],[.70,2.59,-.61]],.026);
+ wire('Front power switch lead',frontIO,fp,[[1.81,4.43,.04],[1.61,4.21,-.71],[1.56,1.40,-.58],[.46,1.40,-.58],[.30,1.30,-.62]],.013);
  const light=new THREE.PointLight('#96baff',.8,3,2);light.position.set(1.35,3.5,.45);pc.add(light);
  refineTurretProducts({pc,rotors,links,box,cyl,text,batch,port,wire,setPart:id=>{part=id;},steel,black,silver,pcb,gold,rubber,glow});
  batchStaticParts(pc,rotors);pc.updateMatrixWorld(true);

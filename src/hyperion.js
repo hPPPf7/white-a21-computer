@@ -1,3 +1,4 @@
+import { routedCurve } from './routing.js';
 import { refineCase } from './case-details.js';
 import { batchStaticParts } from './performance.js';
 import * as THREE from 'three';
@@ -84,7 +85,7 @@ export function createHyperion(renderer) {
     box('Recessed screw drive',[.023,.007,.004],[pos[0],pos[1],pos[2]+.01],black,.002,parent);
   }
   function tube(name,points,r=.053,mat=rubber) {
-    const path=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+    const path=routedCurve(points);
     const m=new THREE.Mesh(new THREE.TubeGeometry(path,Math.max(36,points.length*6),r,8,false),mat);add(m,name);
     return path;
   }
@@ -181,11 +182,11 @@ export function createHyperion(renderer) {
   box('Rear panel',[.06,5.53,2.56],[-3.04,3.22,0],dark,.018);
   meshPanel('Rear fan grille',1.30,1.30,[-3.08,4.80,.10],[0,-Math.PI/2,0]);
   for(let i=0;i<8;i++)box('Rear PCI expansion cover',[.025,.17,1.62],[-3.09,1.56+i*.195,.05],gunmetal,.005);
-  polygon('Power shroud with GPU power aperture',[[-2.9,-1.19],[2.9,-1.19],[2.9,1.19],[-2.9,1.19]],.055,[0,1.29,0],dark,[-Math.PI/2,0,0],[[1.65,-.48,.66,.54]]);
-  polygon('Lower side panel OLED opening',[[-2.93,-.39],[2.93,-.39],[2.93,.39],[-2.93,.39]],.06,[0,.87,1.19],dark,[0,0,0],[[-2.0,0,.95,.32]]);
+  polygon('Power shroud with GPU power aperture',[[-2.9,-1.19],[2.9,-1.19],[2.9,1.19],[-2.9,1.19]],.055,[0,1.40,0],dark,[-Math.PI/2,0,0],[[1.65,-.48,.66,.54],[1.76,.98,.45,.26]]);
+  polygon('Lower side panel OLED opening',[[-2.93,-.39],[2.93,-.39],[2.93,.53],[-2.93,.53]],.06,[0,.87,1.19],dark,[0,0,0],[[-2.0,0,.95,.32]]);
   text('H Y P E R I O N',1.63,.13,[.55,.81,1.225],'#6f839a');
   text('REPUBLIC OF GAMERS',1.25,.09,[.58,.65,1.225],'#46586d');
-  box('Side multifunction light panel',[1.48,3.85,.035],[1.64,3.42,-1.02],gunmetal,.018);
+  polygon('Side multifunction light panel',[[-.74,-1.925],[.74,-1.925],[.74,1.925],[-.74,1.925]],.035,[1.64,3.42,-1.02],gunmetal,[0,0,0],[[.03,-1.81,.42,.20]]);
   const rogArt=tex(640,1600,(c,w,h)=>{
     c.strokeStyle='#7967d9';c.lineWidth=9;c.beginPath();c.moveTo(100,500);c.lineTo(550,340);c.lineTo(450,610);c.lineTo(210,700);c.lineTo(120,640);c.lineTo(470,470);c.stroke();
     c.fillStyle='#91b1df';c.font='bold 75px Arial';c.fillText('ROG',210,865);c.save();c.translate(335,1380);c.rotate(-Math.PI/2);c.font='30px Arial';c.fillText('REPUBLIC OF GAMERS',0,0);c.restore();
@@ -260,7 +261,7 @@ export function createHyperion(renderer) {
   const ssdPins=[];for(let i=0;i<24;i++)if(i!==5)ssdPins.push([-.755,3.48+i*.008,-.884]);batch('WD M-key gold contacts',[.034,.005,.003],ssdPins,gold);
 
   part='psu';
-  box('ROG Thor 1200W PSU body',[1.89,.84,1.67],[-2.10,.81,.01],dark,.055);
+  box('ROG Thor 1200W PSU body',[1.89,.84,1.67],[-2.10,.91,.01],dark,.055);
   const oled=box('Thor OLED display bezel',[1.03,.39,.027],[-2.0,.87,1.215],black,.018);
   const thor=tex(1024,384,c=>{c.fillStyle='#08101c';c.fillRect(0,0,1024,384);c.fillStyle='#b9efff';c.font='bold 97px Arial';c.fillText('ROG THOR',65,133);c.font='60px Arial';c.fillText('1200W  PLATINUM III',65,239);c.fillStyle='#7485a1';c.font='22px Arial';c.fillText('DISPLAY DEMO',65,314);});
   decal('Thor power display',.92,.31,[-2.0,.87,1.233],thor);
@@ -269,7 +270,7 @@ export function createHyperion(renderer) {
   const psuEps=port('Thor CPU modular connector',[-1.12,1.00,-.14],[.18,.13,.24]);
   const psuAux=port('Thor SATA peripheral power',[-1.12,.50,.13],[.18,.12,.26]);
   text('ROG THOR',.98,.19,[-2.11,.83,.86],'#bac4d1');
-  for(let i=0;i<8;i++){const r=ring('Thor fan guard',.16+i*.048,.008,[-2.12,.381,0],gunmetal);r.rotation.x=Math.PI/2;}
+  for(let i=0;i<8;i++){const r=ring('Thor fan guard',.16+i*.048,.008,[-2.12,.487,0],gunmetal);r.rotation.x=Math.PI/2;}
   box('Thor rear power inlet',[.08,.20,.28],[-3.08,.81,.18],black,.02);
 
   // Two independent AIO systems; no shared or disconnected hose ends.
@@ -314,8 +315,8 @@ export function createHyperion(renderer) {
   const strimerAtx=port('Strimer 24-pin latched plug',[.39,4.38,-.69],[.14,.48,.18]);
   for(let i=0;i<12;i++){
     const dy=(i-5.5)*.033;
-    link('Strimer motherboard power conductor '+i,strimerAtx,psuAtx,[[.39,4.38+dy,-.69],[.60,4.38+dy,-.30],[.92,4.38+dy,-.25],[1.12,4.24+dy,-.49],[1.12,4.18+dy,-1.19],[1.12,1.02+dy*.3,-1.19],[.42,.79,-.59],[-1.12,.74+dy*.35,-.42]],.016,rubber);
-    tube('24P luminous guide '+i,[[.39,4.38+dy,-.58],[.60,4.38+dy,-.27],[.92,4.38+dy,-.22],[1.12,4.24+dy,-.46],[1.12,4.18+dy,-1.14]],.010,[cyan,violet,pink][Math.floor(i/4)]);
+    link('Strimer motherboard power conductor '+i,strimerAtx,psuAtx,[[.39,4.38+dy,-.69],[.60,4.38+dy,-.30],[.92,4.38+dy,-.25],[.85,4.24+dy,-.49],[.85,4.18+dy,-1.24],[.85,1.02+dy*.3,-1.24],[.42,.79,-.59],[-1.12,.74+dy*.35,-.42]],.016,rubber);
+    tube('24P luminous guide '+i,[[.39,4.38+dy,-.58],[.60,4.38+dy,-.27],[.92,4.38+dy,-.22],[.85,4.24+dy,-.46],[.85,4.18+dy,-1.14]],.010,[cyan,violet,pink][Math.floor(i/4)]);
   }
   for(const x of [.64,.86])box('Strimer 24-pin comb',[.033,.43,.055],[x,4.38,-.252],dark,.009);
   part='strimerGpu';
@@ -327,17 +328,17 @@ export function createHyperion(renderer) {
   for(const y of [1.5,1.95])box('GPU Strimer guide comb',[.32,.04,.13],[1.66,y,y===1.5?.55:.66],dark,.008);
   part='wiring';
   for(let i=0;i<8;i++){const dx=((i%4)-1.5)*.04;link('CPU EPS conductor '+i,eps,psuEps,[[-1.83+dx,5.23,-.83],[-1.83+dx,5.45,-.85],[-1.83+dx,5.43,-1.21],[-1.0+dx,1.0,-1.21],[-.65,.93,-.62],[-1.12,1.0,-.14+dx]],.013,rubber);}
-  link('RYUJIN pump to AIO_PUMP',pumpPort,aio,[[-1.45,4.75,-.60],[-1.45,4.89,-.60],[-.64,4.97,-.71],[-.64,5.23,-.85]],.017);
+  link('RYUJIN pump to AIO_PUMP',pumpPort,aio,[[-1.45,4.75,-.60],[-1.45,4.89,-.52],[-.64,4.89,-.52],[-.13,4.89,-.52],[-.13,5.20,-.70],[-.64,5.30,-.70],[-.64,5.30,-.85],[-.64,5.23,-.85]],.017);
   const controlHub=port('Wireless fan controller SATA power hub',[1.76,1.50,-.98],[.22,.16,.09]);
-  link('Wireless controller power',controlHub,psuAux,[[1.76,1.5,-.98],[1.76,1.22,-1.19],[1.76,.87,-1.19],[.10,.52,.06],[-1.12,.5,.13]],.022);
+  link('Wireless controller power',controlHub,psuAux,[[1.76,1.5,-.98],[1.76,1.22,-.98],[1.76,.87,-1.19],[.10,.52,.06],[-1.12,.5,.13]],.022);
   const fanHarness=port('Top linked fan PWM port',[1.24,5.42,-.46],[.10,.10,.10]);
   link('Top radiator fan PWM',fanHarness,cpuFan,[[1.24,5.42,-.46],[1.24,5.51,-.79],[-.42,5.50,-.93],[-.42,5.23,-.85]],.020);
   const rearPort=port('Rear fan PWM port',[-2.72,4.20,-.33],[.10,.10,.1]);
   link('Rear exhaust PWM',rearPort,rearHeader,[[-2.72,4.2,-.33],[-2.67,3.87,-.62],[-2.18,3.65,-.85]],.018);
   const frontPort=port('Front fan bank power input',[2.79,1.87,-.45],[.10,.1,.1]);
-  link('Front fan bank power',frontPort,controlHub,[[2.79,1.87,-.45],[2.60,1.64,-.65],[2.17,1.5,-.96],[1.76,1.5,-.98]],.023);
-  link('LCD control USB harness',fanHarness,usb,[[1.24,5.42,-.46],[1.33,5.54,-.9],[1.3,5.40,-1.20],[1.3,1.61,-1.20],[-1.88,1.83,-.89],[-1.88,2.28,-.84]],.018);
-  link('ARGB sync harness',argb,controlHub,[[.17,5.23,-.85],[.82,5.28,-.91],[1.0,5.35,-1.20],[1.63,1.6,-1.19],[1.76,1.5,-.98]],.013);
+  link('Front fan bank power',frontPort,controlHub,[[2.79,1.87,-.45],[2.83,1.70,-.74],[2.83,1.52,-.76],[2.17,1.52,-.94],[1.76,1.5,-.98]],.023);
+  link('LCD control USB harness',fanHarness,usb,[[1.24,5.42,-.46],[1.33,5.54,-.9],[.85,5.54,-.94],[.85,4.15,-.94],[.85,4.15,-1.20],[1.60,1.61,-1.20],[1.60,1.61,-.94],[-1.88,1.83,-.89],[-1.88,2.28,-.84]],.018);
+  link('ARGB sync harness',argb,controlHub,[[.17,5.23,-.85],[.65,5.28,-.91],[.85,4.15,-.91],[.85,4.15,-1.20],[1.63,1.60,-1.20],[1.76,1.60,-.98],[1.76,1.5,-.98]],.013);
   const io=port('Front panel I/O PCB',[2.74,5.96,0],[.32,.04,1.75]);
   const fp=port('Motherboard F_PANEL header',[.16,2.28,-.84],[.18,.10,.12]);
   link('Front I/O harness',io,fp,[[2.74,5.96,0],[2.98,5.84,-.85],[2.97,2.0,-.92],[1.91,1.53,-.98],[.16,1.80,-.86],[.16,2.28,-.84]],.025);

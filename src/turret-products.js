@@ -47,7 +47,7 @@ export function refineTurretProducts(api){
  const a=pc.getObjectByName('GPU PCIe power connector');a.name='GPU 8-pin power connector A';
  const b=port('GPU 8-pin power connector B',[.87,2.12,.70],[.17,.12,.14]);
  for(const x of [.66,.87]){for(let i=0;i<4;i++)box('8-pin plug wire separator',[.010,.055,.07],[x-.055+i*.036,2.163,.70],silver);}
- wire('Second GPU 8-pin PCIe cable',pc.getObjectByName('Fixed PSU cable outlet'),b,[[-.54,.72,-.48],[.02,.72,-.5],[1.12,1.3,.39],[1.07,1.90,.86],[.87,2.12,.70]],.044);
+ wire('Second GPU 8-pin PCIe cable',pc.getObjectByName('Fixed PSU cable outlet'),b,[[-.54,.72,-.48],[.02,.86,-.5],[.24,.96,-.52],[1.17,.96,.48],[1.17,1.43,.48],[1.62,1.43,.90],[1.62,2.40,.90],[.87,2.40,.90],[.87,2.12,.70]],.044);
  // Low-profile AMD Wraith Stealth with AM4 screw spacing and molded circular rim.
  part('cooler');remove(o=>o.userData.partId==='cooler'&&o.name!=='Cooler PWM lead');
  cyl('Wraith Stealth aluminum base',.405,.08,[-.83,3.45,-.49],silver);
@@ -106,11 +106,11 @@ export function refineTurretProducts(api){
   for(const z of [-.09,.105])for(let i=0;i<4;i++)put(new THREE.TorusGeometry(.528,.025,6,16,Math.PI/2),'Vortex tri-directional light ring',[0,0,z],glow[i],[0,0,i*Math.PI/2],g);
   for(const x of [-.51,.51])for(const y of [-.51,.51])box('Vortex rubber corner pad',[.16,.16,.13],[x,y,0],rubber,g);
  }
- const hub=port('COUGAR Core Box C controller',[1.14,2.65,-.93],[.53,.75,.09]);
+ const hub=port('COUGAR Core Box C controller',[.89,2.65,-.71],[.53,.75,.09]);
  remove(o=>o.userData.partId==='wiring'&&o.name.startsWith('Front fan power'));
  for(let i=links.length-1;i>=0;i--)if(links[i].name.startsWith('Front fan power'))links.splice(i,1);
- for(const[name,y]of [['Upper fan cable connector',3.04],['Lower fan cable connector',1.65]]){const fan=pc.getObjectByName(name);wire('Vortex 6-pin fan/controller '+y,fan,hub,[[1.85,y,-.51],[1.69,y,-.88],[1.41,2.65,-.94],[1.14,2.65,-.93]],.022);}
- wire('Core Box SATA power',pc.getObjectByName('Fixed PSU cable outlet'),hub,[[-.54,.72,-.48],[-.2,.72,-.92],[1.14,1.2,-.94],[1.14,2.65,-.93]],.03);
+ for(const[name,y]of [['Upper fan cable connector',3.04],['Lower fan cable connector',1.65]]){const fan=pc.getObjectByName(name);wire('Vortex 6-pin fan/controller '+y,fan,hub,[[1.85,y,-.51],[1.69,y,-.71],[.89,2.65,-.61],[.89,2.65,-.71]],.022);}
+ wire('Core Box SATA power',pc.getObjectByName('Fixed PSU cable outlet'),hub,[[-.54,.72,-.48],[-.2,.72,-.93],[1.30,.72,-.93],[1.30,1.95,-.93],[1.30,1.95,-.69],[1.20,2.20,-.61],[.89,2.20,-.61],[.89,2.65,-.61],[.89,2.65,-.71]],.03);
  part('case');pc.getObjectByName('PSU shroud with wiring openings').position.y=1.19;const side=pc.getObjectByName('PSU shroud side');side.scale.y=.85/.63;side.position.y=.77;pc.getObjectByName('Shroud ventilation').position.y=1.211;
  // Drop animation references belonging to meshes replaced above.
  for(let i=rotors.length-1;i>=0;i--){let p=rotors[i];while(p.parent)p=p.parent;if(p!==pc)rotors.splice(i,1);}
