@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export function inspectClearance(root){
  root.updateMatrixWorld(true);const solids=[],tubes=[],panels=[];
  const owner=o=>{while(o&&!o.userData.partId)o=o.parent;return o?.userData.partId;};
- root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.name.startsWith('Static parts /'))return;
+ root.traverse(o=>{if(o.userData.clearanceRoute)tubes.push({name:o.name,parent:o.parent,userData:o.userData,matrixWorld:o.matrixWorld,geometry:{parameters:o.userData.clearanceRoute}});if(o.userData.bundleStrand)return;if(!o.isMesh||o.isInstancedMesh||o.name.startsWith('Static parts /'))return;
   if(!o.visible&&!o.userData.batchedSource)return;
   if(o.geometry.type==='TubeGeometry')tubes.push(o);
   if(o.geometry.type==='ExtrudeGeometry'&&owner(o)==='case')panels.push(o);
@@ -21,5 +21,11 @@ export function inspectClearance(root){
    for(let i=1;i<points.length;i++){const direction=points[i].clone().sub(points[i-1]),length=direction.length();if(length<1e-8)continue;ray.set(points[i-1],direction.normalize());ray.near=.00001;ray.far=length;const hits=ray.intersectObject(mesh,false);if(hits.length){panelCrossings.push({tube:t.name,panel:p.name,at:hits[0].point.toArray().map(v=>+v.toFixed(3))});break;}}
   }
  }material.dispose();
- return {cableContacts,bodyContacts,panelCrossings};
+ // Tube-to-tube broad phase, followed by densely sampled centerline proximity.
+ const routes=tubes.filter(t=>!/(guide|sense|Core Pipe)/i.test(t.name)).map(t=>{const points=Array.from({length:241},(_,i)=>t.geometry.parameters.path.getPoint(i/240).applyMatrix4(t.matrixWorld));return {t,points,r:t.geometry.parameters.radius,b:new THREE.Box3().setFromPoints(points).expandByScalar(t.geometry.parameters.radius)};}),tubeContacts=[];
+ for(let i=0;i<routes.length;i++)for(let j=i+1;j<routes.length;j++){const a=routes[i],b=routes[j];if(Math.max(a.r,b.r)<.03||!a.b.intersectsBox(b.b))continue;let best=Infinity,at,indices;const shared=a.points[0].distanceTo(b.points[0])<.13;
+  for(let ai=8;ai<233;ai++)for(let bi=8;bi<233;bi++){if(shared&&a.points[ai].distanceTo(a.points[0])<.25&&b.points[bi].distanceTo(b.points[0])<.25)continue;const d=a.points[ai].distanceToSquared(b.points[bi]);if(d<best){best=d;at=a.points[ai];indices=[ai,bi];}}
+  if(best<(a.r+b.r)**2*.90)tubeContacts.push({a:a.t.name,b:b.t.name,gap:+(Math.sqrt(best)-a.r-b.r).toFixed(3),at:at.toArray().map(v=>+v.toFixed(3)),indices});
+ }
+ return {cableContacts,bodyContacts,panelCrossings,tubeContacts};
 }

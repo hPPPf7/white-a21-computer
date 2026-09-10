@@ -138,7 +138,7 @@ function screw(position, parent = pc) {
   box('Screw slot', [0.028, 0.005, 0.002], [position[0], position[1], position[2] + 0.008], dark, 0, parent);
 }
 function cable(name, points, radius = 0.04, material = ivory, parent = pc) {
-  const path = routedCurve(points);
+  const path = routedCurve(points, name.includes('coolant') ? .55 : .28);
   const mesh = new THREE.Mesh(new THREE.TubeGeometry(path, Math.max(32, points.length * 6), radius, 8, false), material);
   mesh.castShadow = true; mesh.name = name; parent.add(identify(mesh)); return path;
 }
@@ -372,9 +372,9 @@ for (let i = 0; i < 2; i++) {
   const y=3.08+i*0.22, z=-0.19+i*0.39;
   fitting('Pump swivel hose fitting',[-0.37,y,-0.34],[1,0,0]);
   fitting('Radiator end-tank hose fitting',[1.015,4.25,z],[1,0,0]);
-  const points=[[-0.36,y,-0.34],[-0.18,y,-0.34],[0.17,y-0.16,0.14],
-    [0.84+i*0.15,2.97+i*0.19,0.37],[1.48+i*0.18,3.32,0.37],
-    [1.50+i*0.18,3.94,z],[1.28,4.25,z],[1.01,4.25,z]];
+  const points=[[-0.36,y,-0.34],[-0.18,y,-0.34],[0.17,y-0.16,0.14+i*0.22],
+    [0.84+i*0.10,2.97+i*0.25,0.32+i*0.23],[1.48+i*0.13,3.32+i*0.22,0.32+i*0.23],
+    [1.50+i*0.13,3.94+i*0.12,z],[1.28,4.25,z],[1.01,4.25,z]];
   const path=cable('Continuous coolant hose '+i,points,0.057,sleeve);
   connections.push({name:'Coolant '+i,from:'Pump swivel',to:'Radiator end tank',start:points[0],end:points.at(-1)});
   const ringCount = 48;
@@ -490,7 +490,7 @@ const lightSplit=socket('ARGB splitter junction',[0.96,3.80,-0.66],[0.17,0.08,0.
 wire('5V ARGB main harness',argb,lightSplit,[[0.48,2.45,-0.58],[0.78,2.45,-0.58],[0.78,3.80,-0.58],[0.78,4.00,-0.67],[0.96,3.95,-0.66],[0.96,3.80,-0.66]],0.013,ivory);
 for(const x of [-0.99,0.25]) {
   const led=socket('Radiator fan ARGB lead '+x,[x+0.58,4.0,0.56],[0.07,0.08,0.10]);
-  wire('Fan ARGB branch '+x,lightSplit,led,[[0.96,3.8,-0.66],[1.02,3.99,-0.67],[x+0.62,3.99,-0.67],[x+0.62,3.99,0.56],[x+0.58,4.0,0.56]],0.012,ivory);
+  wire('Fan ARGB branch '+x,lightSplit,led,[[0.96,3.8,-0.66],[1.02,3.99,-0.67],[x+0.76,3.99,-0.67],[x+0.76,3.99,0.56],[x+0.58,4.0,0.56]],0.012,ivory);
 }
 const pumpRgb=socket('Pump ARGB lead',[-0.55,3.49,-0.39],[0.10,0.07,0.10]);
 wire('Pump ARGB branch',lightSplit,pumpRgb,[[0.96,3.8,-0.66],[0.85,3.71,-0.22],[-0.25,3.70,-0.22],[-0.55,3.49,-0.39]],0.012,ivory);

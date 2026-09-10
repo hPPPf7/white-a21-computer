@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Box3, Vector3, TubeGeometry } from 'three';
-import { routedCurve } from '../src/routing.js';
+import { routedCurve, bundledStrands } from '../src/routing.js';
 
 test('tight rear-chamber turn stays between side panel and tray', () => {
   const points = [[.85,4.18,-.94],[.85,4.18,-1.24],[.85,1.02,-1.24],[.42,.79,-.59]];
@@ -20,4 +20,16 @@ test('duplicate route points keep connector endpoints and finite tangents', () =
   for (let i=0;i<=100;i++) assert(curve.getTangent(i/100).toArray().every(Number.isFinite));
   assert.deepEqual(curve.getPoint(0).toArray(),[0,0,0]);
   assert.deepEqual(curve.getPoint(1).toArray(),[1,1,0]);
+});
+
+test('conductors stay separated and within their audited bundle envelope', () => {
+ const route=routedCurve([[0,0,0],[0,1,0],[1,2,0],[1,2,1]],.35);
+ for(const count of [8,24]){
+  const radius=.067,wireRadius=radius*(count===24?.12:.19),strands=bundledStrands(route,radius,count);
+  for(let i=0;i<=120;i++){
+   const t=i/120,center=route.getPointAt(t),points=strands.map(s=>s.getPoint(t));
+   for(const point of points) assert(point.distanceTo(center)+wireRadius<=radius+1e-8);
+   for(let a=0;a<points.length;a++)for(let b=a+1;b<points.length;b++) assert(points[a].distanceTo(points[b])>2*wireRadius);
+  }
+ }
 });

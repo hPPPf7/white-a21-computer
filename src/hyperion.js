@@ -85,7 +85,7 @@ export function createHyperion(renderer) {
     box('Recessed screw drive',[.023,.007,.004],[pos[0],pos[1],pos[2]+.01],black,.002,parent);
   }
   function tube(name,points,r=.053,mat=rubber) {
-    const path=routedCurve(points);
+    const path=routedCurve(points, name.includes('coolant') ? .65 : .35);
     const m=new THREE.Mesh(new THREE.TubeGeometry(path,Math.max(36,points.length*6),r,8,false),mat);add(m,name);
     return path;
   }
@@ -283,7 +283,7 @@ export function createHyperion(renderer) {
   const pumpPort=port('RYUJIN pump power lead',[-1.45,4.75,-.60],[.11,.07,.11]);
   for(let i=0;i<2;i++){
     const a=fitting('RYUJIN pump swivel',[-.68,4.12+i*.24,-.48]),b=fitting('RYUJIN radiator fitting',[1.36,5.70,-.29+i*.58]);
-    link('CPU AIO coolant tube '+i,a,b,[[-.68,4.12+i*.24,-.48],[-.39,4.12+i*.24,-.48],[.60+i*.18,3.97+i*.20,.15],[1.73+i*.15,4.27,.21],[1.82+i*.14,5.28,-.29+i*.58],[1.63,5.70,-.29+i*.58],[1.36,5.70,-.29+i*.58]],.061,rubber);
+    link('CPU AIO coolant tube '+i,a,b,[[-.68,4.12+i*.24,-.48],[-.39,4.12+i*.24,-.48],[.60+i*.18,3.97+i*.20,.15+i*.23],[1.73+i*.15,4.27+i*.22,.21+i*.23],[1.82+i*.14,5.28,-.29+i*.58],[1.63,5.70,-.29+i*.58],[1.36,5.70,-.29+i*.58]],.061,rubber);
   }
   for(const x of [-1.79,-.55,.69])fan('Top TL LCD fan',[x,5.44,0],[Math.PI/2,0,0],'lcdPack',true);
   fan('Rear TL LCD exhaust',[-2.83,4.77,.18],[0,Math.PI/2,0],'lcdSingle',true);
