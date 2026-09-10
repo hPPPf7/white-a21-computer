@@ -5,7 +5,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     { id:'memory', category:'記憶體', title:'XPG Lancer 白色 · 32GB', detail:'DDR5-5600 CL36 · 16GB × 2' },
     { id:'ssd1', category:'固態硬碟 01', title:'UMAX M1500 · 1TB', detail:'PCIe 4.0 · 讀 7000 / 寫 5500 MB/s' },
     { id:'ssd2', category:'固態硬碟 02', title:'KLEVV CRAS C710 · 1TB', detail:'PCIe 3.0 · 讀 2050 / 寫 1650 MB/s' },
-    { id:'cooler', category:'水冷散熱', title:'Apexgaming NANOCOOL PRO', detail:'240mm · 白色 · ARGB' },
+    { id:'cooler', category:'水冷散熱', title:'Apexgaming NANCOOL PRO', detail:'240mm · 白色 · ARGB' },
     { id:'gpu', category:'顯示卡', title:'RTX 4070 SUPER AERO OC', detail:'GIGABYTE · 12GB · 白色' },
     { id:'case', category:'機殼', title:'ASUS A21 白色', detail:'玻璃側板 · M-ATX · 後置 120mm 風扇' },
     { id:'psu', category:'電源供應器', title:'Seasonic FOCUS GX-850', detail:'850W · ATX 3.0 · 白色 · 全模組' },

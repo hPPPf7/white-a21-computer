@@ -237,7 +237,7 @@ export function refineHardware({pc,renderer}) {
 
   // Radiator end tanks surround a genuinely open fin stack; underside fan braces
   // and screw seats have physical thickness.
-  part='cooler';removeWhere(o=>o.name==='NANOCOOL PRO 240 radiator');
+  part='cooler';removeWhere(o=>o.name==='NANCOOL PRO 240 radiator');
   for(const x of [-1.66,.92])box('Radiator sealed end tank',[.17,.27,1.20],[x,4.25,.05],powder,.02);
   for(const x of [-1.52,.79])for(const z of [-.5,.6])screw([x,4.397,z],[-Math.PI/2,0,0],.025);
   part='case';

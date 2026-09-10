@@ -1,3 +1,4 @@
+import { createNancoolPump } from './nancool.js';
 import { refineComponentFaces, inspectComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
 import { inspectClearance } from './clearance.js';
@@ -16,7 +17,7 @@ export const specification = Object.freeze({
   motherboard: 'ASUS TUF GAMING B760M-PLUS WIFI',
   memory: 'ADATA XPG Lancer DDR5-5600 CL36 32GB (2 × 16GB), white',
   storage: ['UMAX M1500 1TB PCIe 4.0', 'KLEVV CRAS C710 1TB PCIe 3.0'],
-  cooler: 'Apexgaming NANOCOOL PRO 240 ARGB, white',
+  cooler: 'Apexgaming NANCOOL PRO 240 ARGB, white',
   gpu: 'GIGABYTE GeForce RTX 4070 SUPER AERO OC 12G',
   case: 'ASUS A21, white', psu: 'Seasonic FOCUS GX-850 ATX 3.0, white',
 });
@@ -336,48 +337,43 @@ fan('Rear 120mm case exhaust', [-2.16, 3.56, 0.17], 1.2, [0, Math.PI / 2, 0], fa
 
 // 240 mm radiator and two downward-facing ARGB fans.
 currentPart = 'cooler';
-box('NANOCOOL PRO 240 radiator', [2.73, 0.27, 1.20], [-0.37, 4.25, 0.05], white, 0.035);
+box('NANCOOL PRO 240 radiator', [2.73, 0.27, 1.20], [-0.37, 4.25, 0.05], white, 0.035);
 box('Radiator fin core', [2.43, 0.23, 1.07], [-0.37, 4.25, 0.05], dark);
 batchBoxes('Radiator aluminum fin', [0.018, 0.225, 1.08], Array.from({length: 60}, (_, i) => [-1.55 + i * 0.040, 4.25, 0.05]), silver);
 for (const z of [-0.565, 0.665]) box('Radiator white sidewall', [2.70, 0.27, 0.045], [-0.37, 4.25, z], white, 0.018);
-for (const x of [-0.99, 0.25]) fan('NANOCOOL 120mm ARGB radiator fan', [x, 4.0, 0.05], 1.2, [Math.PI / 2, 0, 0]);
-label('NANOCOOL', 0.73, 0.12, [-0.35, 4.25, 0.693], { color: '#8b9397', weight: 500 });
+for (const x of [-0.99, 0.25]) fan('NANCOOL 120mm ARGB radiator fan', [x, 4.0, 0.05], 1.2, [Math.PI / 2, 0, 0]);
+label('NANCOOL', 0.73, 0.12, [-0.35, 4.25, 0.693], { color: '#8b9397', weight: 500 });
 
 // CPU cold plate, illuminated pump face and sleeved tubes.
 box('CPU cold plate in contact with heat spreader',[0.44,0.5,0.08],[-0.73,3.18,-0.55],silver,0.018);
-box('NANOCOOL CPU water block', [0.66, 0.68, 0.34], [-0.73, 3.18, -0.38], white, 0.10);
+createNancoolPump(pc);
 for(const x of [-1.03,-0.43])for(const y of [2.86,3.5]) {
   box('Pump mounting lug',[0.11,0.12,0.17],[x,y,-0.57],silver,0.015);
   screw([x,y,-0.47]);
 }
-cylinder('Pump face metallic rim', 0.275, 0.055, [-0.73, 3.18, -0.19], silver);
-torus(0.251, 0.015, [-0.73, 3.18, -0.152], cyan);
-cylinder('Pump glass face', 0.233, 0.015, [-0.73, 3.18, -0.145], mat('#eaf1f3', 0.4, 0.22));
-label('APEX', 0.32, 0.105, [-0.73, 3.22, -0.131], { color: '#53636c', weight: 700 });
-label('i5-13500', 0.30, 0.074, [-0.73, 3.11, -0.130], { color: '#6d7a80', weight: 500 });
-// Physical identification on the cooler mount, without a screen-space overlay.
-label('14 CORE / 20 THREAD', 0.55, 0.073, [-0.73, 2.79, -0.38], { color: '#becacd', weight: 500 });
 const sleeve = mat('#c6cdce', 0.08, 0.72);
 // Fittings use the same endpoints as the hoses, including a straight strain-relief section.
 const connections = [];
 function fitting(name, position, direction, radius = 0.076) {
-  const m = cylinder(name,radius,0.15,position,silver);
+  const m = cylinder(name,radius,0.15,position,white);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(...direction));
   for(const offset of [-0.055,0.055]) {
     const ring = torus(radius,0.009,position,rubber);
     ring.position.addScaledVector(new THREE.Vector3(...direction),offset);
     ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...direction));
   }
+  return m;
 }
 for (let i = 0; i < 2; i++) {
-  const y=3.08+i*0.22, z=-0.19+i*0.39;
-  fitting('Pump swivel hose fitting',[-0.37,y,-0.34],[1,0,0]);
-  fitting('Radiator end-tank hose fitting',[1.015,4.25,z],[1,0,0]);
-  const points=[[-0.36,y,-0.34],[-0.18,y,-0.34],[0.17,y-0.16,0.14+i*0.22],
-    [0.84+i*0.10,2.97+i*0.25,0.32+i*0.23],[1.48+i*0.13,3.32+i*0.22,0.32+i*0.23],
-    [1.50+i*0.13,3.94+i*0.12,z],[1.28,4.25,z],[1.01,4.25,z]];
+  const y=3.14-i*.20, z=-.19+i*.39;
+  const pumpFitting=fitting('Pump swivel hose fitting',[-1.105,y,-.34],[-1,0,0]);
+  const radiatorFitting=fitting('Radiator end-tank hose fitting',[.92,4.09,z],[0,-1,0]);
+  const points=[[-1.12,y,-.34],[-1.29,y,-.34],[-1.30,y-.10,.03+i*.15],
+    [-.98,2.83-i*.14,.12+i*.12],[-.02,2.77-i*.14,.12+i*.12],
+    [1.02,2.99-i*.04,.30+i*.15],[1.31+i*.15,3.60,z],
+    [1.24+i*.13,3.89,z],[.92,3.90,z],[.92,4.08,z]];
   const path=cable('Continuous coolant hose '+i,points,0.057,sleeve);
-  connections.push({name:'Coolant '+i,from:'Pump swivel',to:'Radiator end tank',start:points[0],end:points.at(-1)});
+  connections.push({name:'Coolant '+i,from:pumpFitting.name,to:radiatorFitting.name,start:points[0],end:points.at(-1),fromMesh:pumpFitting,toMesh:radiatorFitting});
   const ringCount = 48;
   const rings = new THREE.InstancedMesh(new THREE.TorusGeometry(0.0575, 0.002, 6, 24), ivory, ringCount - 1);
   const ringTransform = new THREE.Object3D();
@@ -493,8 +489,8 @@ for(const x of [-0.99,0.25]) {
   const led=socket('Radiator fan ARGB lead '+x,[x+0.58,4.0,0.56],[0.07,0.08,0.10]);
   wire('Fan ARGB branch '+x,lightSplit,led,[[0.96,3.8,-0.66],[1.02,3.99,-0.67],[x+0.76,3.99,-0.67],[x+0.76,3.99,0.56],[x+0.58,4.0,0.56]],0.012,ivory);
 }
-const pumpRgb=socket('Pump ARGB lead',[-0.55,3.49,-0.39],[0.10,0.07,0.10]);
-wire('Pump ARGB branch',lightSplit,pumpRgb,[[0.96,3.8,-0.66],[0.85,3.71,-0.22],[-0.25,3.70,-0.22],[-0.55,3.49,-0.39]],0.012,ivory);
+const pumpRgb=socket('Pump ARGB lead',[-0.55,3.56,-0.39],[0.10,0.07,0.10]);
+wire('Pump ARGB branch',lightSplit,pumpRgb,[[0.96,3.8,-0.66],[0.85,3.71,-0.22],[-0.25,3.70,-0.22],[-0.55,3.56,-0.39]],0.012,ivory);
 
 // Front-panel PCB touches the underside of the USB, audio and power controls.
 const io=box('Front I/O circuit board',[0.27,0.035,1.50],[2.1,4.47,0.04],pcb);

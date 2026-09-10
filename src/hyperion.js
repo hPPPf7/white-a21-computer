@@ -106,7 +106,7 @@ export function createHyperion(renderer) {
     const mat=new THREE.MeshStandardMaterial({color:'#313844',metalness:.65,roughness:.38,alphaMap:map,alphaTest:.5,side:THREE.DoubleSide});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(...pos);m.rotation.set(...rot);return add(m,name);
   }
-  function screen(name,w,h,pos,title,value,rot=[0,0,0],parent=root) {
+  function screen(name,w,h,pos,title,value,rot=[0,0,0],parent=root,circular=false) {
     const map=tex(768,768,(c,W,H)=>{
       const bg=c.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#0c1729');bg.addColorStop(1,'#070a11');c.fillStyle=bg;c.fillRect(0,0,W,H);
       c.strokeStyle='#60dfff';c.lineWidth=9;c.beginPath();c.arc(384,350,242,.25,5.5);c.stroke();
@@ -114,6 +114,7 @@ export function createHyperion(renderer) {
       c.textAlign='center';c.fillStyle='#dbefff';c.font='bold 113px Arial';c.fillText(value,384,380);c.font='33px Arial';c.fillText(title,384,465);
       c.fillStyle='#647b9c';c.font='23px monospace';c.fillText('DISPLAY DEMO',384,673);
     },`screen:${title}:${value}`);
+    if(circular){const display=new THREE.Mesh(new THREE.CircleGeometry(w/2,64),new THREE.MeshBasicMaterial({map,toneMapped:false}));display.position.set(...pos);display.rotation.set(...rot);add(display,name,parent);display.castShadow=false;return display;}
     return decal(name,w,h,pos,map,rot,parent);
   }
   function fan(name,pos,rotation,id,lcd=false) {
@@ -135,8 +136,14 @@ export function createHyperion(renderer) {
     blades.instanceMatrix.needsUpdate=true;
     blades.computeBoundingSphere();
     rotor.add(blades);
-    cyl('TL motor hub',lcd?.18:.125,.19,[0,0,.04],black,group);
-    if(lcd)screen('TL LCD display',.31,.31,[0,0,.144],'LIAN LI','38°',[0,0,0],group);
+    cyl('TL motor hub',lcd?.233:.125,.19,[0,0,.04],black,group);
+    if(lcd){
+      cyl('TL LCD recessed cylindrical housing',.230,.032,[0,0,.132],gunmetal,group);
+      cyl('TL LCD black bezel backing',.218,.012,[0,0,.149],black,group);
+      ring('TL LCD machined bezel',.218,.007,[0,0,.155],gunmetal,group);
+      screen('TL LCD circular 1.6-inch display',.405,.405,[0,0,.156],'LIAN LI','38°',[0,0,0],group,true);
+      const glass=new THREE.Mesh(new THREE.CircleGeometry(.2025,64),new THREE.MeshStandardMaterial({color:'#c3d3df',metalness:.45,roughness:.12,transparent:true,opacity:.055,depthWrite:false}));glass.position.z=.158;add(glass,'TL LCD circular protective glass',group);glass.castShadow=false;
+    }
     else text('LIAN LI',.18,.05,[0,0,.14],'#c8d2dd',[0,0,0],group);
     for(const x of [-.52,.52])for(const y of [-.52,.52])screw([x,y,.12],group);
     return group;
@@ -353,6 +360,7 @@ export function createHyperion(renderer) {
   root.updateMatrixWorld(true);
   return {
     pc:root,parts:hyperionParts,specification:hyperionSpec,
+    views:{lcdPack:[.25,-1,.25],lcdSingle:[1,.12,.10]},
     title:'ROG HYPERION',subtitle:'9800X3D / RTX 5090 D',target:new THREE.Vector3(0,3.12,0),distance:17.7,
     update(dt){rotors.forEach((r,i)=>r.rotation.z-=dt*(1.1+i*.09));},
     connections(){root.updateMatrixWorld(true);return links.map(l=>({name:l.name,from:l.from,to:l.to,start:l.start,end:l.end,startSeated:new THREE.Box3().setFromObject(l.fromMesh).expandByScalar(.008).containsPoint(new THREE.Vector3(...l.start)),endSeated:new THREE.Box3().setFromObject(l.toMesh).expandByScalar(.008).containsPoint(new THREE.Vector3(...l.end))}));},
