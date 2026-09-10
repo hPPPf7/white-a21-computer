@@ -1,3 +1,4 @@
+import { refineComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
 import { refineCase } from './case-details.js';
 import { batchStaticParts } from './performance.js';
@@ -346,6 +347,7 @@ export function createHyperion(renderer) {
   for(const [pos,color] of [[[.9,4.6,.4],'#7169ff'],[[-1.6,4.1,.4],'#65dfff'],[[2.0,2.6,.5],'#a758ea']]){
     const light=new THREE.PointLight(color,1.25,3.5,2);light.position.set(...pos);root.add(light);
   }
+  refineComponentFaces(root, 1);
   refineCase(root, true);
   batchStaticParts(root, rotors);
   root.updateMatrixWorld(true);

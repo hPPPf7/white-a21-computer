@@ -1,3 +1,4 @@
+import { refineComponentFaces, inspectComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
 import { inspectClearance } from './clearance.js';
 import { refineCase } from './case-details.js';
@@ -558,6 +559,7 @@ cc.fillStyle = grad; cc.fillRect(0, 0, 128, 128);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 4.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(contactCanvas), transparent: true, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact);
 
+refineComponentFaces(pc, 0);
 refineCase(pc);
 batchStaticParts(pc, rotors);
 let hyperion = null;
@@ -675,6 +677,7 @@ window.__computer = {
   get specification(){return builds[buildIndex].specification;},
   get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:builds[buildIndex]?.fanCounts??null};},
   inspector: inspector.inspect,
+  componentDetails:()=>inspectComponentFaces(builds[buildIndex].pc),
   clearance:()=>inspectClearance(builds[buildIndex].pc),
   connections: () => buildIndex!==0 ? (builds[buildIndex]?.connections()??[]) : connections.map(c => {
     const result={name:c.name,from:c.from,to:c.to,start:c.start,end:c.end};

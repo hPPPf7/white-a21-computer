@@ -66,7 +66,7 @@ export function createInspector({ THREE, pc, camera, controls, canvas, reduceMot
     selected=id;
     for(const child of pc.children) {
       // Lights remain for an isolated object; all unrelated geometry is hidden.
-      child.visible=child.isLight ? originalVisibility.get(child) : (id ? child.userData.partId===id && originalVisibility.get(child) : originalVisibility.get(child));
+      child.visible=child.isLight ? originalVisibility.get(child) : (id ? child.userData.partId===id && (child.userData.inspectionOnly || originalVisibility.get(child)) : originalVisibility.get(child));
     }
     invalidateShadows();
     rows.forEach(row=>row.setAttribute('aria-pressed',String(row.dataset.part===id)));

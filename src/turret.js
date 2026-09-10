@@ -1,3 +1,4 @@
+import { refineComponentFaces } from './component-faces.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { routedCurve, bundledStrands } from './routing.js';
 import { refineTurretProducts } from './turret-products.js';
@@ -118,6 +119,7 @@ export function createTurret(renderer){
  wire('Front power switch lead',frontIO,fp,[[1.81,4.43,.04],[1.61,4.21,-.71],[1.56,1.40,-.58],[.46,1.40,-.58],[.30,1.30,-.62]],.013);
  const light=new THREE.PointLight('#96baff',.8,3,2);light.position.set(1.35,3.5,.45);pc.add(light);
  refineTurretProducts({pc,rotors,links,box,cyl,text,batch,port,wire,setPart:id=>{part=id;},steel,black,silver,pcb,gold,rubber,glow});
+ refineComponentFaces(pc, 2);
  batchStaticParts(pc,rotors);pc.updateMatrixWorld(true);
  return {pc,parts,specification:turretSpec,title:'COUGAR TURRET',subtitle:'Ryzen 5 2600 / RTX 3060 Ti',target:new THREE.Vector3(0,2.3,0),distance:12.6,views:{gpu:[.55,-.65,1],hdd:[.35,1,.60],memory:[.6,.15,1]},fanCounts:{front:2,rear:0,cpu:1,gpu:3},update(dt){rotors.forEach(r=>r.rotation.z-=dt*1.7);},connections(){pc.updateMatrixWorld(true);return links.map(l=>({name:l.name,from:l.from,to:l.to,start:l.start,end:l.end,startSeated:new THREE.Box3().setFromObject(l.a).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.start)),endSeated:new THREE.Box3().setFromObject(l.b).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.end))}));}};
 }
