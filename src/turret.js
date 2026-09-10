@@ -61,8 +61,8 @@ export function createTurret(renderer){
  for(const y of [.34,4.47])for(const z of [-.97,.97])box('Side frame folded rail',[4.08,.10,.08],[0,y,z]);
  for(const x of [-1.52,1.52])for(const z of [-.73,.73]){box('Case foot',[.44,.18,.34],[x,.14,z]);box('Rubber foot pad',[.38,.035,.29],[x,.032,z],rubber);}
  mesh('Top dust mesh',3.23,1.74,[-.23,4.49,0],[-Math.PI/2,0,0]);
- plate('Rear ventilated frame',1.95,4.1,[-2.03,2.4,0],[[.10,1.25,1.24,1.24],[-.67,1.03,.39,1.4],[.08,-.59,1.37,1.40],[-.05,-1.78,1.52,.48]],[0,-Math.PI/2,0]);
- mesh('Unoccupied rear exhaust grille',1.23,1.23,[-2.049,3.65,.1],[0,-Math.PI/2,0]);
+ plate('Rear ventilated frame',1.95,4.1,[-2.03,2.4,0],[[.23,1.25,1.20,1.20],[-.69,1.03,.445,1.585],[.08,-.59,1.37,1.40],[-.05,-1.78,1.52,.48]],[0,-Math.PI/2,0]);
+ mesh('Unoccupied rear exhaust grille',1.23,1.23,[-2.049,3.65,.23],[0,-Math.PI/2,0]);
  for(let i=0;i<7;i++)plate('Removable PCI cover',1.35,.16,[-2.054,1.20+i*.19,.08],[[-.4,0,.22,.055],[0,0,.22,.055],[.4,0,.22,.055]],[0,-Math.PI/2,0]);
  for(const z of [-.95,.95]){box('Front intake side frame',[.15,4.15,.10],[2.04,2.4,z]);mesh('Front side air intake',.18,3.7,[2.035,2.45,z],[0,0,0]);}
  for(const y of [.36,4.43])box('Front cap',[.15,.15,1.9],[2.04,y,0]);

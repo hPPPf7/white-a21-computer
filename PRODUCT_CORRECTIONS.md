@@ -33,3 +33,11 @@ All three cases previously had a floating dust-filter plane without a complete s
 References: [ASUS A21 service manual](https://dlcdnets.asus.com/pub/ASUS/ODD/DC/A21/A21_R2R_Manual.pdf?model=A21), [Hyperion upper filter assembly](https://www.asus.com/uk/support/faq/1051497/), [COUGAR TURRET RGB](https://cougargaming.com/products/cases/turret_rgb/).
 
 Verified assembled and isolated case views from above, all 32 component selections, 117 seated connections and zero reported major tube or panel crossings. The roof adds two draw calls per build; fine filter strands share a texture rather than individual geometry.
+
+## TURRET rear motherboard I/O
+
+Replaced the four generic recessed connector blocks with the X470 GAMING PRO CARBON non-AC rear I/O layout: two USB 2.0, four USB 3.1 Gen1, Gen2 Type-A and Type-C, PS/2, DisplayPort, HDMI, LAN, Clear CMOS, five audio jacks and optical S/PDIF. Added a fitted shield with individual through-apertures, a rolled rim, metal socket walls, recessed contacts and connector tongues. Optional AC-model antenna sockets are omitted. Small connector profiles are simplified procedural geometry.
+
+The case I/O opening now matches the shield dimensions and the adjacent rear exhaust opening is separated from it. Source: [MSI manual, rear I/O panel, page 25](https://download-2.msi.com/archive/mnu_exe/mb/X470GAMINGPROCARBON_X470GAMINGPROCARBONAC.pdf).
+
+Validated close-up and assembled rear views, all 19 port/button centerlines against the shield and case opening (zero obstructions), motherboard isolation/restore, and the existing three-build connection and clearance regression checks.

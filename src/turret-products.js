@@ -1,3 +1,4 @@
+import { createTurretRearIO } from './turret-io.js';
 import * as THREE from 'three';
 
 // Product-based reconstruction. Unknown identities are explicit in the catalogue.
@@ -98,8 +99,7 @@ export function refineTurretProducts(api){
  const eps2=port('Second EPS socket (unpopulated)',[-1.18,4.30,-.61],[.19,.13,.13]);
  for(let i=0;i<2;i++)box('PCIe x1 socket',[.27,.07,.11],[-1.22,1.82-i*.43,-.61],black);
  for(let i=0;i<8;i++)box('Right-angle SATA III connector',[.14,.11,.15],[.61,1.38+i*.12,-.60],black);
- for(const [yy,n]of [[4.00,'PS2 and USB'],[3.66,'HDMI / DisplayPort'],[3.30,'USB 3.1'],[2.96,'LAN and USB']]){box(n+' rear housing',[.22,.26,.35],[-1.82,yy,-.62],silver);box(n+' rear opening',[.009,.17,.25],[-1.937,yy,-.62],black);}
- for(let i=0;i<5;i++)cyl('Gold audio jack',.034,.055,[-1.96,2.75-i*.09,-.62],gold,pc,[0,0,Math.PI/2]);
+ createTurretRearIO(pc);
  // Vortex FCB 120 uses a Core Box controller rather than a direct motherboard fan connection.
  part('frontFans');
  for(const g of pc.children.filter(o=>o.isGroup&&o.userData.partId==='frontFans')){
