@@ -1,3 +1,4 @@
+import { refineCaseRoof } from './case-roof.js';
 import { refineComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
 import { refineCase } from './case-details.js';
@@ -356,6 +357,7 @@ export function createHyperion(renderer) {
   }
   refineComponentFaces(root, 1);
   refineCase(root, true);
+  refineCaseRoof(root,1);
   batchStaticParts(root, rotors);
   root.updateMatrixWorld(true);
   return {

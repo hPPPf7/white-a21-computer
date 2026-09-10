@@ -25,3 +25,11 @@ The LCD is a 1.6-inch circular display. All four modeled LCD fans (the three-fan
 - Visual inspection of the installed cooler, isolated mirror head, and LCD fans from front and oblique angles.
 
 The clearance checks sample modeled geometry; they are regression checks rather than an exhaustive physical assembly simulation.
+
+## Case roof closure
+
+All three cases previously had a floating dust-filter plane without a complete surrounding roof. Each now has a continuous, thick steel deck with real ventilation apertures, a fine mesh filter, perimeter binding and a lift tab. The Hyperion filter footprint stops before its I/O strip. The rectangular perforation pattern is a procedural approximation, not manufacturer CAD.
+
+References: [ASUS A21 service manual](https://dlcdnets.asus.com/pub/ASUS/ODD/DC/A21/A21_R2R_Manual.pdf?model=A21), [Hyperion upper filter assembly](https://www.asus.com/uk/support/faq/1051497/), [COUGAR TURRET RGB](https://cougargaming.com/products/cases/turret_rgb/).
+
+Verified assembled and isolated case views from above, all 32 component selections, 117 seated connections and zero reported major tube or panel crossings. The roof adds two draw calls per build; fine filter strands share a texture rather than individual geometry.

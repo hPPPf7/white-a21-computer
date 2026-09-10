@@ -1,3 +1,4 @@
+import { refineCaseRoof } from './case-roof.js';
 import { createNancoolPump } from './nancool.js';
 import { refineComponentFaces, inspectComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
@@ -557,6 +558,7 @@ contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact
 
 refineComponentFaces(pc, 0);
 refineCase(pc);
+refineCaseRoof(pc,0);
 batchStaticParts(pc, rotors);
 let hyperion = null;
 const builds=[
