@@ -1,3 +1,4 @@
+import { refineRearConnections, inspectRearPorts } from './rear-connections.js';
 import { refineCaseRoof } from './case-roof.js';
 import { createNancoolPump } from './nancool.js';
 import { refineComponentFaces, inspectComponentFaces } from './component-faces.js';
@@ -218,7 +219,7 @@ for (const z of [-0.36, -0.55]) { const port = cylinder('3.5mm audio jack', 0.03
 
 // Rear panel: ventilation, motherboard I/O, expansion covers, and PSU exhaust.
 box('Rear panel', [0.055, 4.2, 2.10], [-2.29, 2.39, 0], ivory);
-meshPanel('Rear exhaust grille', 1.25, 1.25, [-2.325, 3.62, 0.10], [0, -Math.PI / 2, 0], '#c5cccd');
+meshPanel('Rear exhaust grille', 1.25, 1.25, [-2.325, 3.62, 0.17], [0, -Math.PI / 2, 0], '#c5cccd');
 box('Rear I/O inset', [0.07, 1.38, 0.39], [-2.335, 3.40, -0.74], silver, 0.018);
 for (let i = 0; i < 6; i++) box('Rear USB and display port', [0.012, 0.10, 0.21], [-2.377, 2.88 + i * 0.16, -0.74], black, 0.01);
 for (let i = 0; i < 4; i++) {
@@ -559,6 +560,7 @@ contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact
 refineComponentFaces(pc, 0);
 refineCase(pc);
 refineCaseRoof(pc,0);
+refineRearConnections(pc,0);
 batchStaticParts(pc, rotors);
 let hyperion = null;
 const builds=[
@@ -672,6 +674,7 @@ renderer.setAnimationLoop(time => {
 
 // Read-only inspection hook for render and input verification; no on-screen UI.
 window.__computer = {
+  rearPorts:()=>inspectRearPorts(builds[buildIndex].pc),
   get specification(){return builds[buildIndex].specification;},
   get build(){return {index:buildIndex,title:builds[buildIndex].title,count:builds.length,visibleBuilds:builds.map(b=>b?.pc.visible??false),fanCounts:builds[buildIndex]?.fanCounts??null};},
   inspector: inspector.inspect,

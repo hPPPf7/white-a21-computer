@@ -18,7 +18,7 @@ export function refineCase(root, hyperion=false) {
   }
   const old=root.getObjectByName('Rear panel');if(old)old.removeFromParent();
   if(!hyperion){
-    panel('Stamped rear chassis with open exhaust',2.10,4.2,.055,[-2.29,2.39,0],[[.1,1.23,1.26,1.26],[-.74,1.01,.40,1.40],[-.08,-1.73,1.52,.63],[.04,-.74,1.36,.79]],[0,-Math.PI/2,0]);
+    panel('Stamped rear chassis with open exhaust',2.10,4.2,.055,[-2.29,2.39,0],[[.17,1.23,1.20,1.20],[-.74,1.01,.445,1.585],[-.12,-1.71,1.50,.70],[.04,-.5625,1.36,1.145]],[0,-Math.PI/2,0]);
     for(const o of [...root.children])if(['PCI slot cover','PCI vent opening'].includes(o.name))o.removeFromParent();
     for(let i=0;i<4;i++){
       panel('A21 slotted PCI cover',1.35,.14,.025,[-2.337,1.35+i*.20,.04],[[-.42,0,.23,.047],[-.14,0,.23,.047],[.14,0,.23,.047],[.42,0,.23,.047]],[0,-Math.PI/2,0]);
@@ -44,7 +44,7 @@ export function refineCase(root, hyperion=false) {
     for(const z of [.24,-.05])for(const sign of [-1,1])box('USB metal socket lip',[.083,.009,.012],[2.1,4.574,z+sign*.077],edge);
     for(const z of [-.36,-.55])add(new THREE.TorusGeometry(.033,.006,6,18),'Audio jack metal rim',[2.1,4.576,z],edge,[-Math.PI/2,0,0]);
   }else{
-    panel('Hyperion stamped rear frame',2.56,5.53,.06,[-3.04,3.22,0],[[.10,1.58,1.31,1.31],[.05,-.9775,1.63,1.55]],[0,-Math.PI/2,0]);
+    panel('Hyperion stamped rear frame',2.56,5.53,.06,[-3.04,3.22,0],[[.10,1.58,1.31,1.31],[-.91,1.35,.445,1.585],[.05,-.91,1.63,1.70],[.01,-2.31,1.69,.86]],[0,-Math.PI/2,0]);
     // Hinge knuckles, pivot pins and the tool-free door latch.
     for(const y of [1.12,5.36]){
       box('Door hinge mounting leaf',[.19,.34,.06],[-2.96,y,1.35],edge);

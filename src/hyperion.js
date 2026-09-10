@@ -1,3 +1,4 @@
+import { refineRearConnections } from './rear-connections.js';
 import { refineCaseRoof } from './case-roof.js';
 import { refineComponentFaces } from './component-faces.js';
 import { routedCurve } from './routing.js';
@@ -343,7 +344,7 @@ export function createHyperion(renderer) {
   const fanHarness=port('Top linked fan PWM port',[1.24,5.42,-.46],[.10,.10,.10]);
   link('Top radiator fan PWM',fanHarness,cpuFan,[[1.24,5.42,-.46],[1.24,5.51,-.79],[-.42,5.50,-.93],[-.42,5.23,-.85]],.020);
   const rearPort=port('Rear fan PWM port',[-2.72,4.20,-.33],[.10,.10,.1]);
-  link('Rear exhaust PWM',rearPort,rearHeader,[[-2.72,4.2,-.33],[-2.67,3.87,-.62],[-2.18,3.65,-.85]],.018);
+  link('Rear exhaust PWM',rearPort,rearHeader,[[-2.72,4.2,-.33],[-2.67,3.88,-.60],[-2.60,3.69,-.60],[-2.18,3.65,-.85]],.018);
   const frontPort=port('Front fan bank power input',[2.79,1.87,-.45],[.10,.1,.1]);
   link('Front fan bank power',frontPort,controlHub,[[2.79,1.87,-.45],[2.83,1.70,-.74],[2.83,1.52,-.76],[2.17,1.52,-.94],[1.76,1.5,-.98]],.023);
   link('LCD control USB harness',fanHarness,usb,[[1.24,5.42,-.46],[1.33,5.54,-.9],[.85,5.54,-.94],[.85,4.15,-.94],[.85,4.15,-1.20],[1.60,1.61,-1.20],[1.60,1.61,-.94],[-1.88,1.83,-.89],[-1.88,2.28,-.84]],.018);
@@ -358,6 +359,7 @@ export function createHyperion(renderer) {
   refineComponentFaces(root, 1);
   refineCase(root, true);
   refineCaseRoof(root,1);
+  refineRearConnections(root,1);
   batchStaticParts(root, rotors);
   root.updateMatrixWorld(true);
   return {

@@ -41,3 +41,13 @@ Replaced the four generic recessed connector blocks with the X470 GAMING PRO CAR
 The case I/O opening now matches the shield dimensions and the adjacent rear exhaust opening is separated from it. Source: [MSI manual, rear I/O panel, page 25](https://download-2.msi.com/archive/mnu_exe/mb/X470GAMINGPROCARBON_X470GAMINGPROCARBONAC.pdf).
 
 Validated close-up and assembled rear views, all 19 port/button centerlines against the shield and case opening (zero obstructions), motherboard isolation/restore, and the existing three-build connection and clearance regression checks.
+
+## WHITE A21 and ROG HYPERION complete rear panels
+
+Replaced generic or missing motherboard I/O with model-specific shields and recessed sockets. B760M-PLUS WIFI has eight rear USB ports, HDMI/DisplayPort, 2.5Gb LAN, antenna connectors, five audio jacks and optical S/PDIF. X870E GODLIKE has eight USB-A plus seven USB-C ports, 10Gb/5Gb LAN, antenna connectors, Flash BIOS/Clear CMOS/Smart buttons, two audio jacks and optical S/PDIF. Port types and counts follow the manufacturer documentation; small shapes, spacing and internal enclosure depth are procedural approximations fitted to this scene.
+
+Both GPUs now have four individually opened video sockets and a vented bracket fitted to the occupied expansion slots. Blank covers in occupied slots were removed. Both PSUs have vented rear panels, recessed mains inlets with three metal blades and rocker switches. Removed the old solid PSU rear faces, and corrected the case openings so they do not cover the motherboard, graphics or PSU ports.
+
+Sources: [ASUS B760M-PLUS WIFI specifications](https://www.asus.com/us/motherboards-components/motherboards/tuf-gaming/tuf-gaming-b760m-plus-wifi/techspec/), [MSI X870E GODLIKE manual, pages 25–26](https://download.msi.com/archive/mnu_exe/mb/MEGX870EGODLIKE_English.pdf), [GIGABYTE AERO specifications](https://www.gigabyte.com/uk/Graphics-Card/GV-N407SAERO-OC-12GD/sp).
+
+Verification covers all 75 modeled rear motherboard/GPU/PSU port and button centerlines across the three builds (zero shield or case obstructions), assembled rear views, component isolation/restore and existing routing regression checks. The third build's existing rear I/O was retained. These visual models do not simulate electrical operation.
