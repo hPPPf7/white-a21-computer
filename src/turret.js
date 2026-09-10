@@ -1,18 +1,19 @@
+import { refineTurretProducts } from './turret-products.js';
 import * as THREE from 'three';
 import { batchStaticParts } from './performance.js';
 
-export const turretSpec=Object.freeze({cpu:'AMD Ryzen 5 2600',cores:6,threads:12,clock:'3.40 GHz',motherboard:'MSI X470 GAMING PRO CARBON',memory:'32GB DDR4 (16GB × 2)',gpu:'MSI GeForce RTX 3060 Ti 8GB',storage:['INTEL SSDPEKKW256G8 · 256GB M.2','WDC WD10EZEX-00BBHA0 · 1TB HDD'],psu:'Cooler Master MWE Bronze 550 · 550W',case:'COUGAR TURRET black',cooler:'AMD stock-style down-draft cooler',fans:{front:2,rear:0,cpu:1}});
+export const turretSpec=Object.freeze({cpu:'AMD Ryzen 5 2600',cores:6,threads:12,clock:'3.40 GHz',motherboard:'MSI X470 GAMING PRO CARBON',memory:'Kingston ValueRAM KVR26N19D8/16 × 2 (reference model, unconfirmed)',gpu:'MSI GeForce RTX 3060 Ti GAMING X TRIO 8GB (inferred)',storage:['Intel 760p SSDPEKKW256G8 · 256GB M.2','WDC WD10EZEX-00BBHA0 · 1TB HDD'],psu:'Cooler Master MWE Bronze 550 · 550W',case:'COUGAR TURRET RGB black (inferred variant)',cooler:'AMD Wraith Stealth (inferred)',fans:{front:2,rear:0,cpu:1}});
 const parts=[
  ['cpu','處理器','AMD Ryzen 5 2600','6 核心 / 12 執行緒 · 3.40 GHz'],
  ['motherboard','主機板','MSI X470 GAMING PRO CARBON','AM4 · DDR4 · ATX'],
- ['memory','記憶體','DDR4 · 32GB','16GB × 2 · 外觀依照片重建'],
- ['gpu','顯示卡','MSI GeForce RTX 3060 Ti','8GB · 完整款式未確認，外觀依照片近似'],
- ['ssd1','M.2 固態硬碟','Intel · 256GB','SSDPEKKW256G8'],
+ ['memory','記憶體','Kingston ValueRAM · 32GB','建模選用 KVR26N19D8/16 ×2 · 品牌與時脈未確認'],
+ ['gpu','顯示卡','MSI RTX 3060 Ti GAMING X TRIO','款式推定 · 8GB · TRI FROZR 2 · 雙 8-pin'],
+ ['ssd1','M.2 固態硬碟','Intel 760p · 256GB','SSDPEKKW256G8 · M.2 2280 · PCIe 3.0 ×4'],
  ['hdd','機械硬碟','Western Digital · 1TB','WD10EZEX-00BBHA0 · 3.5 吋'],
- ['cooler','CPU 散熱器','AMD 下吹式散熱器','圓形鋁鰭片 · 單風扇'],
- ['psu','電源供應器','Cooler Master MWE Bronze 550','550W · 版本與外觀細节近似'],
- ['frontFans','前方風扇','RGB 機殼風扇 × 2','依實機照片配置 · 後方未裝風扇'],
- ['case','機殼','COUGAR TURRET','黑色 · 玻璃側板 · 前面板依系列外形近似'],
+ ['cooler','CPU 散熱器','AMD Wraith Stealth','型號推定 · Ryzen 2600 原配款 · AM4'],
+ ['psu','電源供應器','Cooler Master MWE Bronze 550','550W 已確認 · 外觀按初代 MWE Bronze，版本推定'],
+ ['frontFans','前方風扇','COUGAR VORTEX RGB FCB 120 ×2','型號推定 · Core Box C 控制器 · 前方兩顆'],
+ ['case','機殼','COUGAR TURRET RGB','RGB 版本推定 · 206 × 461 × 420 mm'],
 ].map(([id,category,title,detail])=>({id,category,title,detail}));
 
 export function createTurret(renderer){
@@ -92,7 +93,7 @@ export function createTurret(renderer){
  box('GPU side logo rail',[2.08,.21,.033],[-.50,1.81,.529],steel);
  text('msi   GEFORCE RTX',2.04,.15,[-.5,1.85,.553]);text('GEFORCE RTX',.88,.22,[-1.34,2.16,-.13],'#eeeeee',[-Math.PI/2,0,0]);text('msi',.55,.24,[-.23,2.16,-.08],'#eeeeee',[-Math.PI/2,0,0]);
  for(let i=0;i<6;i++){const o=box('Backplate diagonal detail',[.028,.01,.46],[.54+i*.087,2.16,-.17],silver);o.rotation.y=-.5;}
- const gpuPower=port('GPU PCIe power connector',[.66,2.12,.40],[.30,.12,.14]);
+ const gpuPower=port('GPU PCIe power connector',[.66,2.12,.70],[.17,.12,.14]);
  part='psu';box('MWE Bronze 550 PSU',[1.40,.71,1.50],[-1.27,.62,-.02],black);text('MWE BRONZE 550',1.18,.24,[-1.27,.60,.74]);text('COOLER MASTER',1.05,.12,[-1.27,.83,.74]);mesh('PSU rear exhaust',1.22,.52,[-2.045,.62,-.08],[0,-Math.PI/2,0]);box('AC mains socket',[.035,.20,.27],[-2.07,.60,.50],black);box('AC rocker switch',[.045,.12,.08],[-2.075,.63,.72],silver);
  const powerOut=port('Fixed PSU cable outlet',[-.54,.72,-.48],[.09,.22,.23]);
  part='hdd';box('WD10EZEX HDD metal chassis',[1.47,.26,1.016],[1.12,.59,-.03],silver);box('HDD lower controller PCB',[1.04,.017,.73],[1.20,.448,-.04],pcb);text('WD10EZEX  1TB',1.1,.40,[1.12,.727,-.03],'#101820',[-Math.PI/2,0,0]);for(const x of [.49,1.75])for(const z of [-.43,.37])cyl('HDD cover screw',.028,.01,[x,.725,z],black,pc,[0,0,0]);
@@ -104,13 +105,14 @@ export function createTurret(renderer){
  // Continuous point-to-point cable routes through the rear cable chamber.
  wire('24-pin motherboard power',powerOut,atx,[[-.54,.72,-.48],[-.33,.68,-.89],[1.16,.79,-.91],[1.34,2.7,-.91],[1.28,3.08,-.60],[.97,3.15,-.38],[.69,3.13,-.61]],.067);
  wire('CPU EPS power',powerOut,eps,[[-.54,.72,-.48],[-.48,.71,-.91],[-1.72,.9,-.91],[-1.75,4.35,-.91],[-1.43,4.4,-.77],[-1.41,4.3,-.61]],.034);
- wire('GPU PCIe power',powerOut,gpuPower,[[-.54,.72,-.48],[.0,.7,-.55],[.99,.73,-.25],[1.02,1.14,.36],[.93,1.80,.70],[.67,1.89,.63],[.66,2.12,.4]],.052);
+ wire('GPU PCIe power',powerOut,gpuPower,[[-.54,.72,-.48],[.0,.7,-.55],[.99,.73,-.25],[1.02,1.14,.36],[.93,1.80,.70],[.67,1.89,.63],[.66,2.12,.70]],.052);
  wire('HDD SATA data',hddData,sata,[[.365,.53,-.28],[.23,.47,-.49],[.82,.62,-.90],[1.31,1.30,-.9],[1.09,1.65,-.58],[.61,1.71,-.59]],.017);
  wire('HDD SATA power',powerOut,hddPower,[[-.54,.72,-.48],[-.11,.49,-.41],[.12,.44,.06],[.365,.53,.06]],.035);
  for(const[a,y]of [[fanA,3.04],[fanB,1.65]])wire('Front fan power '+y,a,sysFan,[[1.85,y,-.51],[1.75,y-.15,-.86],[1.36,1.40,-.9],[.93,1.38,-.61],[.62,1.46,-.61]],.016);
  wire('Front USB cable',frontIO,usb,[[1.81,4.43,.04],[1.63,4.18,-.89],[1.36,2.76,-.91],[1.06,2.55,-.62],[.70,2.59,-.61]],.026);
  wire('Front power switch lead',frontIO,fp,[[1.81,4.43,.04],[1.61,4.21,-.89],[1.35,1.15,-.91],[.46,1.14,-.69],[.30,1.30,-.62]],.013);
  const light=new THREE.PointLight('#96baff',.8,3,2);light.position.set(1.35,3.5,.45);pc.add(light);
+ refineTurretProducts({pc,rotors,links,box,cyl,text,batch,port,wire,setPart:id=>{part=id;},steel,black,silver,pcb,gold,rubber,glow});
  batchStaticParts(pc,rotors);pc.updateMatrixWorld(true);
- return {pc,parts,specification:turretSpec,title:'COUGAR TURRET',subtitle:'Ryzen 5 2600 / RTX 3060 Ti',target:new THREE.Vector3(0,2.3,0),distance:12.6,views:{gpu:[.55,-.65,1],hdd:[.35,1,.60],memory:[.6,.15,1]},fanCounts:{front:2,rear:0,cpu:1,gpuApproximate:3},update(dt){rotors.forEach(r=>r.rotation.z-=dt*1.7);},connections(){pc.updateMatrixWorld(true);return links.map(l=>({name:l.name,from:l.from,to:l.to,start:l.start,end:l.end,startSeated:new THREE.Box3().setFromObject(l.a).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.start)),endSeated:new THREE.Box3().setFromObject(l.b).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.end))}));}};
+ return {pc,parts,specification:turretSpec,title:'COUGAR TURRET',subtitle:'Ryzen 5 2600 / RTX 3060 Ti',target:new THREE.Vector3(0,2.3,0),distance:12.6,views:{gpu:[.55,-.65,1],hdd:[.35,1,.60],memory:[.6,.15,1]},fanCounts:{front:2,rear:0,cpu:1,gpu:3},update(dt){rotors.forEach(r=>r.rotation.z-=dt*1.7);},connections(){pc.updateMatrixWorld(true);return links.map(l=>({name:l.name,from:l.from,to:l.to,start:l.start,end:l.end,startSeated:new THREE.Box3().setFromObject(l.a).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.start)),endSeated:new THREE.Box3().setFromObject(l.b).expandByScalar(.005).containsPoint(new THREE.Vector3(...l.end))}));}};
 }

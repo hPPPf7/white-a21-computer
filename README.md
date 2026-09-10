@@ -97,4 +97,4 @@ Ryzen 5 2600（6 核心／12 執行緒、3.40 GHz）、MSI X470 GAMING PRO CARBO
 
 第三台於首次切換時才載入，提供十項配件隔離與提示，包含電源艙內的 HDD；SATA 資料／供電、CPU EPS、24-pin、GPU、PWM 與前面板線路皆有連續曲線及端點檢查。
 
-機殼比例參考 [COUGAR TURRET 官方資料](https://cougargaming.com/products/cases/turret/)。缺少正面照片，透明前面板按系列外形近似。RAM 品牌、電源版本及顯卡完整款式未確認，顯卡底面的三風扇配置、插頭細節與被遮蔽的線路為展示用假設；不把未知款式當作已確認型號。
+第三台已改按實際產品資料重建；顯卡採推定的 MSI GAMING X TRIO、散熱器採 AMD Wraith Stealth、RAM 選 Kingston ValueRAM 作低信心建模參考，SSD 確認為 Intel 760p。照片用於判斷款式與安裝位置。完整資料來源、型號確認程度、尺寸與推定依據見 [產品建模依據](PRODUCT_REFERENCES.md)。
