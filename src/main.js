@@ -1,3 +1,4 @@
+import { refineCase } from './case-details.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -555,6 +556,7 @@ cc.fillStyle = grad; cc.fillRect(0, 0, 128, 128);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 4.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(contactCanvas), transparent: true, depthWrite: false }));
 contact.rotation.x = -Math.PI / 2; contact.position.y = 0.011; scene.add(contact);
 
+refineCase(pc);
 batchStaticParts(pc, rotors);
 let hyperion = null;
 const builds=[
